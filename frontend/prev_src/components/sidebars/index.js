@@ -1,5 +1,0 @@
-export { default as CommonSidebar   } from './CommonSidebar'
-export { default as SequenceSidebar } from './SequenceSidebar'
-export { default as MSASidebar      } from './MSASidebar'
-export { default as SangerSidebar   } from './SangerSidebar'
-export { default as PhyloSidebar    } from './PhyloSidebar'

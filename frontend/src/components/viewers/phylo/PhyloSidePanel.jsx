@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo } from 'react'
+import * as d3 from 'd3'
 import { Sliders, Info, Circle, GitBranch, Upload, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { collectLeaves, treeStats, parseMetadata } from '../../../utils/treeHelpers'
 import AnnotSidePanel from './AnnotSidePanel'
@@ -198,6 +199,3 @@ export default function PhyloSidePanel({ treeData, opts, setOpts, meta, setMeta,
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  MAIN COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
