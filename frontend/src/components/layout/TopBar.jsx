@@ -1,4 +1,4 @@
-import { Dna, Microscope, Grid3x3, GitBranch } from 'lucide-react'
+import { Dna, Microscope, Grid3x3, GitBranch, HelpCircle } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useDocStore } from '../../store/useDocStore'
 import { TOOL_LIST } from '../../routes/toolRegistry'
@@ -72,6 +72,20 @@ export default function TopBar() {
             </button>
           )
         })}
+
+        {/* separator + Help → docs page (lives at site root, outside the app) */}
+        <span style={{ width:1, height:22, background:'#dbe3ef', margin:'0 8px' }}/>
+        <a href="/docs.html" title="Documentation &amp; help"
+          style={{
+            display:'flex', alignItems:'center', gap:6,
+            padding:'6px 13px', borderRadius:8, cursor:'pointer',
+            fontSize:13, fontWeight:700, color:'#4a6080', textDecoration:'none',
+            transition:'all .15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background='#f0f4fa' }}
+          onMouseLeave={e => { e.currentTarget.style.background='transparent' }}>
+          <HelpCircle size={14}/> Help
+        </a>
       </nav>
     </header>
   )

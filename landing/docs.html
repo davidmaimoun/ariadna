@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AriaDNA — Documentation</title>
+<meta name="description" content="How to use AriaDNA: sequence viewer, alignments, Sanger chromatograms, phylogenetic trees, matrices and more.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230a1640'/%3E%3Cpath d='M20 8C20 8 46 18 46 32C46 46 20 56 20 56' stroke='%232f7bff' stroke-width='4.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M44 8C44 8 18 18 18 32C18 46 44 56 44 56' stroke='%23ffb200' stroke-width='4.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#f3f6fc;--panel:#ffffff;
+    --line:rgba(20,50,140,.12);--line2:rgba(20,50,140,.20);
+    --fog:#5a6b8c;--paper:#0f1f44;
+    --blue:#1a56db;--cyan:#0ea5d4;--gold:#e0930f;--gold2:#f0b429;
+    --violet:#7c3aed;--emerald:#0a9d6e;--amber:#d97706;
+    --radius:16px;--maxw:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--ink);color:var(--paper);font-family:'Archivo',sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:'JetBrains Mono',monospace}
+  h1,h2,h3,h4{font-family:'Fraunces',serif;letter-spacing:-.02em;line-height:1.12}
+
+  /* NAV */
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+    background:linear-gradient(to bottom,rgba(255,255,255,.94),rgba(255,255,255,.7));border-bottom:1px solid var(--line)}
+  .nav-in{max-width:var(--maxw);margin:0 auto;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:66px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:'Fraunces',serif;font-weight:700;font-size:20px}
+  .brand .ar{background:linear-gradient(90deg,#1a56db,#0ea5d4);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .brand .dna{background:linear-gradient(90deg,#f0b429,#d97706);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .nav-links{display:flex;align-items:center;gap:26px;font-size:14px;color:var(--fog)}
+  .nav-links a:hover{color:var(--paper)}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px;padding:10px 18px;border-radius:11px;cursor:pointer;border:none;
+    background:linear-gradient(105deg,var(--blue),var(--cyan));color:#fff;box-shadow:0 8px 22px rgba(26,86,219,.26);transition:transform .18s}
+  .btn:hover{transform:translateY(-2px)}
+  @media(max-width:820px){.nav-links a:not(.btn){display:none}}
+
+  /* LAYOUT: sidebar + content */
+  .shell{max-width:var(--maxw);margin:0 auto;padding:40px 28px 90px;display:grid;grid-template-columns:230px 1fr;gap:48px;align-items:start}
+  @media(max-width:900px){.shell{grid-template-columns:1fr;gap:24px}}
+
+  .toc{position:sticky;top:90px;font-size:14px}
+  @media(max-width:900px){.toc{position:static;border:1px solid var(--line);border-radius:var(--radius);padding:16px;background:#fff}}
+  .toc h4{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px}
+  .toc a{display:block;padding:6px 0;color:var(--fog);border-left:2px solid transparent;padding-left:12px;margin-left:-12px;transition:all .15s}
+  .toc a:hover{color:var(--paper);border-left-color:var(--blue)}
+  .toc .sub{padding-left:24px;font-size:13px;opacity:.85}
+
+  /* CONTENT */
+  .doc{max-width:760px}
+  .doc .lead{font-size:19px;color:var(--fog);margin:8px 0 10px}
+  .doc h1{font-size:clamp(34px,5vw,52px);font-weight:600}
+  .doc section{padding-top:40px;margin-top:20px;border-top:1px solid var(--line)}
+  .doc section:first-of-type{border-top:none}
+  .doc h2{font-size:30px;font-weight:600;display:flex;align-items:center;gap:12px}
+  .doc h2 .chip{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:7px;font-weight:600}
+  .doc h3{font-size:20px;font-weight:600;margin:26px 0 8px}
+  .doc p{margin:10px 0;color:#33436b}
+  .doc ul,.doc ol{margin:10px 0 10px 4px;padding-left:22px;color:#33436b}
+  .doc li{margin:7px 0}
+  .doc strong{color:var(--paper);font-weight:600}
+  .doc code{font-family:'JetBrains Mono',monospace;font-size:.86em;background:#eaf0fb;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:#1a3a7a}
+  .kbd{font-family:'JetBrains Mono',monospace;font-size:.8em;background:#fff;border:1px solid var(--line2);border-bottom-width:2px;border-radius:6px;padding:2px 7px;color:var(--paper)}
+
+  .card{border:1px solid var(--line);border-radius:var(--radius);background:#fff;padding:20px 22px;margin:18px 0;box-shadow:0 8px 24px rgba(20,50,120,.05)}
+  .note{border-left:4px solid var(--blue);background:#f0f5ff;border-radius:8px;padding:14px 16px;margin:16px 0;font-size:14.5px}
+  .note.tip{border-left-color:var(--emerald);background:#effbf5}
+  .note.warn{border-left-color:var(--amber);background:#fff7ec}
+  .note b{color:var(--paper)}
+
+  .steps2{counter-reset:st;margin:16px 0}
+  .steps2 li{list-style:none;position:relative;padding:4px 0 4px 44px;margin:12px 0}
+  .steps2 li::before{counter-increment:st;content:counter(st);position:absolute;left:0;top:2px;width:28px;height:28px;border-radius:8px;
+    background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;display:grid;place-items:center}
+
+  .shot{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:18px 0;background:linear-gradient(150deg,#dbe6fb,#eef3fc)}
+  .shot img{width:100%;display:block}
+  .shot figcaption{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fog);padding:8px 12px;border-top:1px solid var(--line);background:#fff}
+
+  .pills{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+  .pills span{font-family:'JetBrains Mono',monospace;font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:5px 11px;color:var(--fog);background:#fff}
+
+  footer{border-top:1px solid var(--line);padding:40px 0;margin-top:40px;text-align:center;color:var(--fog);font-size:13px}
+  footer a{color:var(--cyan)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <a class="brand" href="/">
+      <svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" rx="15" fill="#0a1640"/>
+        <path d="M20 8C20 8 46 18 46 32C46 46 20 56 20 56" stroke="#2f7bff" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <path d="M44 8C44 8 18 18 18 32C18 46 44 56 44 56" stroke="#ffb200" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <line x1="22" y1="15" x2="42" y2="19" stroke="rgba(255,255,255,.6)" stroke-width="2.6" stroke-linecap="round"/>
+        <line x1="21" y1="32" x2="43" y2="32" stroke="rgba(255,255,255,.75)" stroke-width="2.6" stroke-linecap="round"/>
+        <line x1="22" y1="49" x2="42" y2="45" stroke="rgba(255,255,255,.6)" stroke-width="2.6" stroke-linecap="round"/>
+      </svg>
+      <span><span class="ar">Aria</span><span class="dna">DNA</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/#tools">Tools</a>
+      <a href="/docs.html">Docs</a>
+      <a class="btn" href="/app">Launch app →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="shell">
+
+  <!-- TABLE OF CONTENTS -->
+  <aside class="toc">
+    <h4>On this page</h4>
+    <a href="#intro">Getting started</a>
+    <a href="#workspace">The workspace &amp; tabs</a>
+    <a href="#sequence">Sequence viewer</a>
+    <a href="#sequence" class="sub">Navigation &amp; reading</a>
+    <a href="#sequence" class="sub">Features &amp; export</a>
+    <a href="#alignment">Alignment (MSA)</a>
+    <a href="#sanger">Sanger chromatogram</a>
+    <a href="#sanger" class="sub">Editing base calls</a>
+    <a href="#tree">Phylogenetic tree</a>
+    <a href="#tree" class="sub">Building a tree</a>
+    <a href="#tree" class="sub">Adding metadata</a>
+    <a href="#tree" class="sub">Layouts &amp; drawing</a>
+    <a href="#matrix">Matrix / heatmap</a>
+    <a href="#variants">VCF, BAM &amp; BLAST</a>
+    <a href="#privacy">Privacy &amp; storage</a>
+  </aside>
+
+  <!-- DOCUMENT -->
+  <main class="doc">
+
+    <section id="intro">
+      <h1>Documentation</h1>
+      <p class="lead">Everything you need to get the most out of AriaDNA — a browser-native genomic viewer. No install, no upload: your files are parsed and rendered locally.</p>
+      <ol class="steps2">
+        <li><strong>Open the app</strong> at <a href="/app" style="color:var(--blue)">ariadna-bio.com/app</a> and pick a tool from the home screen.</li>
+        <li><strong>Open a file</strong> with the <em>Open</em> button in the toolbar, or drag a file onto the drop zone.</li>
+        <li><strong>Explore &amp; export</strong> — zoom, search, recolor, annotate, then export a figure or data file.</li>
+      </ol>
+      <div class="note tip"><b>Tip:</b> Every viewer shares the same layout — a <b>toolbar</b> on top, the <b>canvas</b> in the middle, and a <b>collapsible side panel</b> on the right (click the <span class="kbd">‹</span> / <span class="kbd">›</span> strip to toggle it).</div>
+    </section>
+
+    <section id="workspace">
+      <h2>The workspace &amp; tabs</h2>
+      <p>AriaDNA is multi-document. You can keep several files open at once — a tree, a matrix and a genome — each in its own tab. The <strong>global tab bar</strong> at the top shows every open document across all tools; click a tab to switch, the <span class="kbd">×</span> to close it, or <span class="kbd">+</span> to open another file.</p>
+      <ul>
+        <li>Open as many documents as you need (up to a sensible limit so memory stays healthy).</li>
+        <li>Switching tabs is instant — nothing is re-parsed.</li>
+        <li>Your workspace <strong>survives a page refresh</strong>. It is cleared when you close the app (see <a href="#privacy" style="color:var(--blue)">Privacy</a>).</li>
+      </ul>
+    </section>
+
+    <!-- SEQUENCE -->
+    <section id="sequence">
+      <h2><span class="chip" style="background:#e7f0ff;color:#1a56db">Sequence</span> FASTA &amp; GenBank viewer</h2>
+      <p>The sequence viewer opens FASTA (<code>.fasta</code>, <code>.fa</code>, <code>.fna</code>) and GenBank (<code>.gb</code>, <code>.gbk</code>) files and lets you explore a genome from the whole-contig overview down to a single base.</p>
+
+      <figure class="shot">
+        <img src="/assets/seq_viewer_cut.png" alt="Sequence viewer" loading="lazy" onerror="this.parentElement.style.minHeight='160px'">
+        <figcaption>Sequence viewer — ruler, colored bases, feature track and GC content.</figcaption>
+      </figure>
+
+      <h3>Navigation &amp; reading</h3>
+      <ul>
+        <li><strong>Zoom</strong> with the toolbar <span class="kbd">+</span> / <span class="kbd">−</span> buttons or the mouse wheel over the canvas. At high zoom you read individual <strong>A / T / G / C</strong> letters, each color-coded; zoomed out you see the overall base composition.</li>
+        <li><strong>Pan</strong> by dragging, or use the <strong>minimap</strong> at the bottom to jump anywhere in the contig.</li>
+        <li><strong>Multi-FASTA / multi-contig:</strong> if your file has several sequences, switch between them with the <strong>contig selector</strong> — no need to reload.</li>
+        <li>The <strong>text panel</strong> below the canvas shows the raw sequence; drag its top edge to <strong>resize</strong> it, or hide it to give the canvas more room.</li>
+      </ul>
+
+      <h3>Features &amp; export</h3>
+      <ul>
+        <li><strong>Annotations:</strong> GenBank features (genes, CDS, etc.) are drawn as labeled tracks under the sequence. Hover to see details.</li>
+        <li><strong>GC content</strong> is plotted as a line so you can spot GC-rich/poor regions at a glance.</li>
+        <li><strong>ORFs &amp; translation:</strong> open reading frames are highlighted and you can read the live amino-acid translation of a region.</li>
+        <li><strong>Search</strong> for a motif or subsequence from the toolbar; matches are highlighted on the canvas.</li>
+        <li><strong>Export</strong> the sequence (or a selection) as FASTA, or features as GFF3, from the side panel.</li>
+      </ul>
+      <div class="note"><b>Side panel:</b> the right panel groups statistics (length, GC%, base counts), the feature list, and export options.</div>
+    </section>
+
+    <!-- ALIGNMENT -->
+    <section id="alignment">
+      <h2><span class="chip" style="background:#e7f0ff;color:#1a56db">Alignment</span> Multiple sequence alignment</h2>
+      <p>Open aligned files (<code>.afa</code>, <code>.aln</code>, <code>.msa</code>, or an aligned <code>.fasta</code>) to inspect a multiple sequence alignment.</p>
+      <figure class="shot">
+        <img src="/assets/multi_al.png" alt="MSA viewer" loading="lazy" onerror="this.parentElement.style.minHeight='160px'">
+        <figcaption>Alignment — color-coded columns with a per-column conservation bar.</figcaption>
+      </figure>
+      <ul>
+        <li><strong>Colored columns</strong> make conserved and variable positions obvious; gaps are shown distinctly.</li>
+        <li>The <strong>conservation bar</strong> under the alignment summarizes agreement per column, and the <strong>consensus</strong> row shows the dominant residue.</li>
+        <li><strong>Zoom</strong> from a bird's-eye view of thousands of columns down to single-residue detail; the horizontal scrollbar moves you along the alignment.</li>
+        <li>Hover a column to read its position and composition.</li>
+      </ul>
+    </section>
+
+    <!-- SANGER -->
+    <section id="sanger">
+      <h2><span class="chip" style="background:#e6f7f0;color:#0a9d6e">Sanger</span> Chromatogram viewer</h2>
+      <p>Open an <code>.ab1</code> trace to inspect the four-channel Sanger chromatogram, check quality, and correct base calls.</p>
+      <figure class="shot">
+        <img src="/assets/sanger.png" alt="Sanger chromatogram" loading="lazy" onerror="this.parentElement.style.minHeight='160px'">
+        <figcaption>Sanger trace — the four dye channels (A/C/G/T) with called bases above the peaks.</figcaption>
+      </figure>
+      <ul>
+        <li>The <strong>four colored traces</strong> are the dye channels; the called base sits above each peak, with its <strong>quality (QV)</strong> reflected in the display.</li>
+        <li>Scroll/zoom along the read to inspect noisy regions or low-quality tails.</li>
+      </ul>
+
+      <h3>Editing base calls</h3>
+      <p>You can <strong>replace a miscalled nucleotide</strong> directly:</p>
+      <ol class="steps2">
+        <li><strong>Click a base</strong> on the trace (or its position in the side panel) to select it.</li>
+        <li><strong>Type the correct letter</strong> (A, C, G or T). The edit is applied to that position.</li>
+        <li>Repeat for any other positions you want to fix.</li>
+        <li><strong>Export the corrected read as FASTA</strong> from the side panel when you're done.</li>
+      </ol>
+      <div class="note tip"><b>Tip:</b> Editing changes only your exported sequence — the original trace data stays intact, so you can always compare against the raw peaks.</div>
+    </section>
+
+    <!-- TREE -->
+    <section id="tree">
+      <h2><span class="chip" style="background:#f1ebff;color:#7c3aed">Phylogenetics</span> Tree builder &amp; viewer</h2>
+      <p>The tree tool either <strong>loads a Newick tree</strong> (<code>.nwk</code>, <code>.tre</code>) or <strong>builds one from a distance/profile matrix</strong> (<code>.tsv</code>, <code>.csv</code>). It's the richest viewer — here's how to use its main features.</p>
+      <figure class="shot">
+        <img src="/assets/tree_viewer.png" alt="Phylogenetic tree viewer" loading="lazy" onerror="this.parentElement.style.minHeight='160px'">
+        <figcaption>Tree viewer — rectangular layout with metadata-colored tips and a legend.</figcaption>
+      </figure>
+
+      <h3>Building a tree</h3>
+      <p>When you open a matrix, AriaDNA asks which algorithm to use. Pick the one that suits your data:</p>
+      <ul>
+        <li><strong>Neighbor-Joining (NJ)</strong> — general-purpose distance tree.</li>
+        <li><strong>UPGMA</strong> — assumes a molecular clock (ultrametric).</li>
+        <li><strong>MST</strong> — minimum spanning tree (Kruskal or Prim).</li>
+        <li><strong>GoeBURST</strong> — for allelic profiles (MLST-style) and clonal complexes.</li>
+      </ul>
+      <p>If you already have a Newick file, just open it and the tree is drawn directly.</p>
+
+      <h3>Adding metadata</h3>
+      <p>Metadata lets you <strong>color and annotate</strong> tips by a property (country, year, ST, source…). It's a separate table you load into the open tree:</p>
+      <ol class="steps2">
+        <li>Open the tree's <strong>side panel</strong> (right edge).</li>
+        <li>Use <strong>Upload metadata</strong> and choose a <code>.tsv</code>/<code>.csv</code> file. The <strong>first column must match the tip/leaf names</strong> in the tree; the remaining columns are your metadata fields.</li>
+        <li>Pick the <strong>field</strong> you want to visualize from the dropdown. Each distinct value gets a color, and a <strong>legend</strong> appears.</li>
+      </ol>
+      <div class="note"><b>Format example</b> (tab-separated): the header's first cell is the ID column, then one column per attribute.
+        <div class="mono" style="margin-top:8px;font-size:12.5px;color:#1a3a7a">id&nbsp;&nbsp;&nbsp;country&nbsp;&nbsp;&nbsp;year&nbsp;&nbsp;&nbsp;ST<br>S01&nbsp;&nbsp;&nbsp;France&nbsp;&nbsp;&nbsp;2021&nbsp;&nbsp;&nbsp;131<br>S02&nbsp;&nbsp;&nbsp;Israel&nbsp;&nbsp;&nbsp;2022&nbsp;&nbsp;&nbsp;95</div>
+      </div>
+
+      <h3>Displaying it differently (layouts)</h3>
+      <p>Switch the tree's shape from the toolbar to suit your story:</p>
+      <ul>
+        <li><strong>Rectangular</strong> — classic dendrogram, best for reading labels.</li>
+        <li><strong>Circular</strong> — compact for large trees, great for publication figures.</li>
+        <li><strong>Force / unrooted</strong> — a force-directed network view of relationships.</li>
+      </ul>
+      <p>You can also toggle the <strong>legend</strong>, adjust tip/label visibility, and highlight a clade.</p>
+
+      <h3>Drawing &amp; annotating</h3>
+      <p>The <strong>draw overlay</strong> lets you mark up the tree on top of the canvas — useful for highlighting clusters before exporting a figure.</p>
+      <ol class="steps2">
+        <li>Enable <strong>draw mode</strong> in the side panel.</li>
+        <li>Choose a <strong>shape</strong> (e.g. highlight band / blob), a <strong>color</strong>, and an <strong>opacity</strong>.</li>
+        <li>Draw over the region or clade you want to emphasize.</li>
+        <li>Combine with metadata colors and the legend, then export your annotated figure.</li>
+      </ol>
+      <div class="note tip"><b>Tip:</b> Metadata coloring and manual drawing stack — color tips by <em>country</em>, then draw a band around an outbreak cluster to make it pop.</div>
+    </section>
+
+    <!-- MATRIX -->
+    <section id="matrix">
+      <h2><span class="chip" style="background:#fdf0e0;color:#d97706">Matrix</span> Distance &amp; allelic heatmaps</h2>
+      <p>Open a matrix (<code>.tsv</code>, <code>.csv</code>, <code>.tab</code>) to view it three ways, switchable from the toolbar:</p>
+      <figure class="shot">
+        <img src="/assets/heatmap.png" alt="Matrix heatmap" loading="lazy" onerror="this.parentElement.style.minHeight='160px'">
+        <figcaption>Matrix — heatmap mode with row/column labels.</figcaption>
+      </figure>
+      <ul>
+        <li><strong>Table</strong> (default) — the raw values, sortable, with a row <strong>filter</strong> and font-size zoom.</li>
+        <li><strong>Heatmap</strong> — values mapped to a color scale you can change; zoom adjusts cell size.</li>
+        <li><strong>Presence / absence</strong> — binary view above a threshold you set.</li>
+      </ul>
+      <ul>
+        <li><strong>Reorder &amp; recolor</strong> rows/columns; sort by sum or alphabetically.</li>
+        <li><strong>Export PNG</strong> of the heatmap or presence/absence view for publications.</li>
+      </ul>
+      <div class="note"><b>Note:</b> the row <em>filter</em> keeps the whole row visible (it never trims columns) and is available in <b>Table</b> mode.</div>
+    </section>
+
+    <!-- VARIANTS -->
+    <section id="variants">
+      <h2><span class="chip" style="background:#e7f0ff;color:#0ea5d4">Variants · Reads · BLAST</span></h2>
+      <p>AriaDNA also opens variant and alignment results:</p>
+      <ul>
+        <li><strong>VCF</strong> (<code>.vcf</code>) — browse variants and triage with <strong>type</strong> and <strong>quality</strong> filters.</li>
+        <li><strong>SAM/BAM</strong> (<code>.sam</code>) — inspect read pileups and coverage.</li>
+        <li><strong>BLAST</strong> (<code>.tsv</code> / <code>.xml</code> / <code>.json</code>) — browse hits sorted by identity and e-value.</li>
+      </ul>
+    </section>
+
+    <!-- PRIVACY -->
+    <section id="privacy">
+      <h2>Privacy &amp; storage</h2>
+      <p>AriaDNA runs entirely in your browser. Files you open are <strong>never uploaded</strong> — parsing and rendering happen on your machine.</p>
+      <ul>
+        <li>Your open documents are saved <strong>locally in your browser</strong> (IndexedDB), so a <strong>refresh keeps your workspace</strong>.</li>
+        <li>When you <strong>close the app</strong>, the anonymous workspace is <strong>cleared</strong> on next launch — nothing lingers.</li>
+        <li>Storage is capped and self-managing: the least recently used documents are evicted before it can grow too large.</li>
+      </ul>
+      <div class="note warn"><b>Heads-up:</b> because anonymous sessions are local and temporary, export anything you want to keep (FASTA, PNG, TSV) before closing.</div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <div class="mono">© 2026 AriaDNA · <a href="/">Home</a> · <a href="/app">Launch app</a> · Powered by <a href="https://www.sudosudev.com" target="_blank" rel="noopener">sudosu.dev</a></div>
+</footer>
+
+</body>
+</html>
