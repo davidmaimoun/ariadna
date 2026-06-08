@@ -2,6 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
+  // App is served under /app (the landing page lives at the site root).
+  base: '/app/',
   plugins: [react()],
   worker: {
     format: 'es',
