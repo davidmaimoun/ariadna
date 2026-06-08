@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AriaDNA — Genomics in your browser</title>
 <meta name="description" content="AriaDNA is a fast, private, browser-based genomic viewer. Sequences, alignments, phylogenetic trees, matrices, Sanger traces, VCF, BAM and BLAST — no install, no upload.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230a1640'/%3E%3Cpath d='M20 8C20 8 46 18 46 32C46 46 20 56 20 56' stroke='%232f7bff' stroke-width='4.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M44 8C44 8 18 18 18 32C18 46 44 56 44 56' stroke='%23ffb200' stroke-width='4.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -20,7 +21,7 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   body{background:var(--ink);color:var(--paper);font-family:'Archivo',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-  body::before{content:"";position:fixed;inset:0;z-index:-2;
+  body::before{content:"";position:fixed;inset:0;z-index:-3;
     background:
       radial-gradient(1100px 700px at 80% -12%, rgba(26,86,219,.10), transparent 60%),
       radial-gradient(900px 600px at 8% 6%, rgba(14,165,212,.08), transparent 55%),
@@ -28,6 +29,14 @@
       var(--ink);}
   body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.025;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+  /* Faint nucleotide trame behind everything */
+  .dna-bg{position:fixed;inset:0;z-index:-2;pointer-events:none;overflow:hidden;
+    opacity:.06;font-family:'JetBrains Mono',monospace;font-size:15px;line-height:2.05;
+    letter-spacing:.34em;white-space:pre-wrap;word-break:break-all;user-select:none;padding:14px 8px;
+    -webkit-mask-image:linear-gradient(180deg,transparent,#000 12%,#000 88%,transparent);
+    mask-image:linear-gradient(180deg,transparent,#000 12%,#000 88%,transparent)}
+
   a{color:inherit;text-decoration:none}
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
   h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-.02em;line-height:1.05}
@@ -124,6 +133,8 @@
 </head>
 <body>
 
+<div class="dna-bg" id="dnaBg" aria-hidden="true"></div>
+
 <nav>
   <div class="wrap nav-in">
     <a class="brand" href="#top">
@@ -145,6 +156,7 @@
       <a href="#tools">Tools</a>
       <a href="#features">Features</a>
       <a href="#start">Quick start</a>
+      <a href="/docs.html">Docs</a>
       <a class="btn btn-primary" href="/app">Launch app →</a>
     </div>
   </div>
@@ -176,7 +188,7 @@
         <span class="tabline mono">ariadna.com/app · tree · matrix · sequence</span>
       </div>
       <div class="shot">
-        <img src="assets/tree_viewer.png" alt="App screenshot placeholder" loading="lazy" onerror="this.style.display='none'">
+        <img src="/assets/tree_viewer.png" alt="App screenshot placeholder" loading="lazy" onerror="this.style.display='none'">
       </div>
     </div>
   </div>
@@ -194,7 +206,7 @@
 
       <article class="tool reveal">
         <div class="shot">
-          <img src="assets/seq_viewer_cut.png" alt="Sequence viewer placeholder" loading="lazy" onerror="this.style.display='none'">
+          <img src="/assets/seq_viewer_cut.png" alt="Sequence viewer placeholder" loading="lazy" onerror="this.style.display='none'">
         </div>
         <div class="body">
           <div class="tag" style="color:var(--cyan)">Sequence</div>
@@ -206,7 +218,7 @@
 
       <article class="tool reveal">
         <div class="shot">
-          <img src="assets/multi_al.png" alt="MSA placeholder" loading="lazy" onerror="this.style.display='none'">
+          <img src="/assets/multi_al.png" alt="MSA placeholder" loading="lazy" onerror="this.style.display='none'">
         </div>
         <div class="body">
           <div class="tag" style="color:var(--cyan)">Alignment</div>
@@ -218,7 +230,7 @@
 
       <article class="tool reveal">
         <div class="shot">
-          <img src="assets/tree_viewer.png" alt="Tree placeholder" loading="lazy" onerror="this.style.display='none'">
+          <img src="/assets/tree_viewer.png" alt="Tree placeholder" loading="lazy" onerror="this.style.display='none'">
         </div>
         <div class="body">
           <div class="tag" style="color:var(--violet)">Phylogenetics</div>
@@ -230,7 +242,7 @@
 
       <article class="tool reveal">
         <div class="shot">
-          <img src="assets/heatmap.png" alt="Matrix placeholder" loading="lazy" onerror="this.style.display='none'">
+          <img src="/assets/heatmap.png" alt="Matrix placeholder" loading="lazy" onerror="this.style.display='none'">
         </div>
         <div class="body">
           <div class="tag" style="color:var(--amber)">Matrix</div>
@@ -242,7 +254,7 @@
 
       <article class="tool reveal">
         <div class="shot">
-          <img src="assets/sanger.png" alt="Sanger placeholder" loading="lazy" onerror="this.style.display='none'">
+          <img src="/assets/sanger.png" alt="Sanger placeholder" loading="lazy" onerror="this.style.display='none'">
         </div>
         <div class="body">
           <div class="tag" style="color:var(--emerald)">Sanger</div>
@@ -254,7 +266,7 @@
 
       <article class="tool reveal">
         <div class="shot">
-          <img src="assets/vcf.png" alt="VCF BAM BLAST placeholder" loading="lazy" onerror="this.style.display='none'">
+          <img src="/assets/vcf.png" alt="VCF BAM BLAST placeholder" loading="lazy" onerror="this.style.display='none'">
         </div>
         <div class="body">
           <div class="tag" style="color:var(--cyan)">Variants · Reads · BLAST</div>
@@ -343,7 +355,7 @@
       </div>
       <div class="foot-col"><h4>Product</h4><a href="/app">Launch app</a><a href="#tools">Tools</a><a href="#features">Features</a><a href="#start">Quick start</a></div>
       <div class="foot-col"><h4>Tools</h4><a href="/app">Sequence &amp; GenBank</a><a href="/app">Alignment (MSA)</a><a href="/app">Phylogenetic tree</a><a href="/app">Matrix / heatmap</a><a href="/app">Sanger trace</a></div>
-      <div class="foot-col"><h4>About</h4><a href="#">Documentation</a><a href="#">Privacy</a><a href="#">Contact</a></div>
+      <div class="foot-col"><h4>About</h4><a href="/docs.html">Documentation</a><a href="#">Privacy</a><a href="#">Contact</a></div>
     </div>
     <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--fog);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px">
       <span class="mono">© 2026 AriaDNA · Genomic Viewer</span>
@@ -357,6 +369,20 @@
     entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target) } })
   },{threshold:.14});
   document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  // Faint nucleotide background (A/T/G/C colored, very low opacity)
+  (function(){
+    const el = document.getElementById('dnaBg'); if(!el) return;
+    const cols = { A:'#0a9d6e', T:'#d14d6a', G:'#d97706', C:'#1a56db' };
+    const bases = 'ATGC';
+    let html = '';
+    for (let i = 0; i < 12000; i++){
+      const b = bases[(Math.random()*4)|0];
+      html += '<span style="color:' + cols[b] + '">' + b + '</span>';
+      if (Math.random() < 0.07) html += '  ';
+    }
+    el.innerHTML = html;
+  })();
 </script>
 </body>
 </html>
