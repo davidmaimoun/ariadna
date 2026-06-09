@@ -4,7 +4,7 @@ import { Sliders, Info, Circle, GitBranch, Upload, X, ChevronDown, ChevronUp } f
 import { collectLeaves, treeStats, parseMetadata } from '../../../utils/treeHelpers'
 import AnnotSidePanel from './AnnotSidePanel'
 
-export default function PhyloSidePanel({ treeData, opts, setOpts, meta, setMeta, highlight, setHighlight, annotGroups, setAnnotGroups, drawMode, setDrawMode, drawShape, setDrawShape, drawColor, setDrawColor, drawOpacity, setDrawOpacity, showLegend, setShowLegend }) {
+export default function PhyloSidePanel({ mode, treeData, opts, setOpts, meta, setMeta, highlight, setHighlight, annotGroups, setAnnotGroups, drawMode, setDrawMode, drawShape, setDrawShape, drawColor, setDrawColor, drawOpacity, setDrawOpacity, showLegend, setShowLegend }) {
   const [tab, setTab] = useState('display')
   const metaRef = useRef()
 
@@ -70,6 +70,31 @@ export default function PhyloSidePanel({ treeData, opts, setOpts, meta, setMeta,
                 </div>
               )}
             </div>
+
+            {/* Display options (iTOL-style) — only for tree layouts, not MST/force */}
+            {mode !== 'force' && (
+            <div style={{ marginBottom:14, padding:'10px 12px', background:'var(--bg2)', borderRadius:8, border:'1px solid var(--border2)', display:'flex', flexDirection:'column', gap:9 }}>
+              {[
+                ['cladogram',    'Cladogram (align all leaves)'],
+                ['alignTips',    'Align tips (line up labels)'],
+                ['showScale',    'Show distance scale bar'],
+                ['showNodes',    'Show node dots'],
+                ['showBranchLen','Show branch lengths'],
+                ['showSupport',  'Show support values'],
+              ].map(([field,label]) => (
+                <label key={field} style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:12.5, color:'var(--txt2)', fontWeight:600 }}>
+                  <input type="checkbox"
+                    checked={!!opts[field]}
+                    onChange={e=>setOpts(o=>({...o,[field]:e.target.checked}))}
+                    style={{ accentColor:'var(--accent)', width:15, height:15 }}/>
+                  {label}
+                </label>
+              ))}
+              <div style={{ fontSize:11, color:'var(--txt4)', paddingTop:2 }}>
+                Tip: <b>scroll</b> over the tree to zoom.
+              </div>
+            </div>
+            )}
 
             <Slider label="Node size"       field="nodeSize" min={1}  max={60} step={0.5}/>
             <Slider label="Label font size" field="fontSize" min={6}  max={40} step={0.5}/>
@@ -199,3 +224,6 @@ export default function PhyloSidePanel({ treeData, opts, setOpts, meta, setMeta,
   )
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────

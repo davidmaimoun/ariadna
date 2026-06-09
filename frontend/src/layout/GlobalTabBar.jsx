@@ -68,8 +68,13 @@ export default function GlobalTabBar() {
           </button>
         )
       })}
-      {/* + → home to pick any tool */}
-      <button onClick={() => navigate('/')} title="New document"
+      {/* + → open another file in the CURRENT tool (so you can have several of the same kind);
+          falls back to home if we're not inside a tool */}
+      <button onClick={() => {
+          const cur = parts[0]
+          const pickerBase = cur === 'msa' || cur === 'vcf' || cur === 'bam' || cur === 'blast' ? 'sequence' : cur
+          navigate(pickerBase ? `/${pickerBase}/new` : '/')
+        }} title="Open another document"
         style={{ display:'flex', alignItems:'center', justifyContent:'center', width:26, height:26,
           borderRadius:6, border:'none', cursor:'pointer', background:'transparent', color:'var(--txt3)', marginLeft:4, flexShrink:0 }}
         onMouseEnter={e=>e.currentTarget.style.background='var(--bg3)'}

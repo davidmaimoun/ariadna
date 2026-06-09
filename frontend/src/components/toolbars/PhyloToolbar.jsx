@@ -1,8 +1,8 @@
-import { Download } from 'lucide-react'
+import { Download, ZoomIn, ZoomOut } from 'lucide-react'
 import CommonToolbar from './CommonToolbar'
-import { Sep, ToolbarBtn } from './ToolbarFeatures'
+import { Sep, ToolbarBtn, StatBadge } from './ToolbarFeatures'
 
-// Phylogenetic Tree | [algo badge] | [rect/circular/force] | [PNG] | [✏ Draw] | close
+// Phylogenetic Tree | [algo badge] | [rect/circular/force] | [zoom] | [PNG] | [✏ Draw] | close
 export default function PhyloToolbar({
   onClose,
   mode, setMode,
@@ -11,6 +11,7 @@ export default function PhyloToolbar({
   onExportPNG,
   algoLabel,
   isAllelic,
+  zoom, setZoom,
 }) {
   const hasData = hasTree || hasGraph
 
@@ -57,6 +58,17 @@ export default function PhyloToolbar({
         )}
 
         <Sep/>
+
+        {/* Zoom — scales the tree canvas (rect & circular) */}
+        {hasTree && mode !== 'force' && setZoom && (
+          <>
+            <ToolbarBtn onClick={() => setZoom(z => Math.max(0.4, +(z-0.2).toFixed(2)))} title="Zoom out"><ZoomOut size={13}/></ToolbarBtn>
+            <StatBadge>{Math.round((zoom||1)*100)}%</StatBadge>
+            <ToolbarBtn onClick={() => setZoom(z => Math.min(4, +(z+0.2).toFixed(2)))} title="Zoom in"><ZoomIn size={13}/></ToolbarBtn>
+            <ToolbarBtn onClick={() => setZoom(1)} title="Reset zoom">Reset</ToolbarBtn>
+            <Sep/>
+          </>
+        )}
 
         {/* PNG export */}
         <ToolbarBtn onClick={onExportPNG} title="Export as PNG">

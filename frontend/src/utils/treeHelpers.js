@@ -25,16 +25,41 @@ export function computeDepths(node, d = 0) {
   for (const c of (node.children || [])) computeDepths(c, d + (c.length || 0.01))
 }
 
-export function assignRectCoords(root, W, H) {
+// Topological height: longest path (in node steps) from this node down to a leaf.
+function nodeHeight(n) {
+  if (!n.children?.length) return 0
+  return 1 + Math.max(...n.children.map(nodeHeight))
+}
+
+export function assignRectCoords(root, W, H, alignTips = false, cladogram = false) {
   computeDepths(root, 0)
   const leaves = collectLeaves(root)
   const rowH   = H / leaves.length
   leaves.forEach((l, i) => { l._y = (i + 0.5) * rowH })
+
+  if (cladogram) {
+    // Place nodes by topological level so all leaves land on the same vertical.
+    const totalH = nodeHeight(root) || 1
+    const place = (n, level) => {
+      // x grows left→right; leaves (height 0) sit at the far right (level === totalH)
+      n._x = (level / totalH) * W
+      n._parentX = level > 0 ? ((level - 1) / totalH) * W : 0
+      if (!n.children?.length) { n._tipX = W; return }
+      n.children.forEach(c => place(c, level + 1))
+      n._y = (n.children[0]._y + n.children[n.children.length - 1]._y) / 2
+    }
+    place(root, 0)
+    return
+  }
+
   const maxD   = Math.max(...leaves.map(l => l._depth), 1)
   function lay(n, parentX) {
     n._x       = (n._depth / maxD) * W
     n._parentX = parentX
-    if (!n.children?.length) return
+    if (!n.children?.length) {
+      n._tipX = alignTips ? W : n._x
+      return
+    }
     n.children.forEach(c => lay(c, n._x))
     n._y = (n.children[0]._y + n.children[n.children.length - 1]._y) / 2
   }

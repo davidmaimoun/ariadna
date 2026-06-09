@@ -31,7 +31,13 @@ export default function PhyloTree({ data, onClose, autoLoad, onAutoLoaded }) {
   // ── Internal state (was in App.jsx) ──────────────────────────────────────
   const [highlight,   setHighlight]   = useState(null)
   const [meta,        setMeta]        = useState(null)
-  const [opts, setOpts] = useState({ nodeSize:7, fontSize:10.5, branchFontSize:8, lineColor:'#b8cfef', leafColor:'#1a56db', metaField:null })
+  const [opts, setOpts] = useState({
+    nodeSize:14, fontSize:12, branchFontSize:8,
+    lineColor:'#9ec5fe', lineWidth:1.4, leafColor:'#1a56db',
+    metaField:null,
+    alignTips:true, cladogram:false, showScale:true, showNodes:false, showBranchLen:true, showSupport:true,
+  })
+  const [zoom, setZoom] = useState(1)
   const [annotGroups,  setAnnotGroups]  = useState([])
   const [showLegendI,  setShowLegendI]  = useState(false)
   const [legendPos,    setLegendPos]    = useState({ x:16, y:16 })
@@ -75,6 +81,18 @@ export default function PhyloTree({ data, onClose, autoLoad, onAutoLoaded }) {
     const ro = new ResizeObserver(([e])=>setSize({ w:Math.floor(e.contentRect.width), h:Math.floor(e.contentRect.height) }))
     ro.observe(el); return ()=>ro.disconnect()
   }, [])
+
+  // Wheel zoom on the tree canvas (plain scroll zooms; the canvas grows and is centered)
+  useEffect(() => {
+    const el = containerRef.current; if (!el) return
+    const onWheel = (e) => {
+      e.preventDefault()
+      const factor = e.deltaY < 0 ? 1.12 : 1/1.12
+      setZoom(z => Math.min(5, Math.max(0.3, +(z*factor).toFixed(3))))
+    }
+    el.addEventListener('wheel', onWheel, { passive:false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [treeData, mode])
 
   const handleSelect = async (algoId, fileOrText, type, fileNameArg) => {
     setLoading(true); setLoadingMsg('Reading file…'); setLoadingPct(10)
@@ -216,6 +234,7 @@ export default function PhyloTree({ data, onClose, autoLoad, onAutoLoaded }) {
         algoLabel={treeData?.algo?.toUpperCase()}
         isAllelic={treeData?.isAllelic}
         onReset={() => { setTreeData(null); setMode(null); setHighlight(null) }}
+        zoom={zoom} setZoom={setZoom}
       />
 
       {/* Body + sidebar */}
@@ -224,13 +243,21 @@ export default function PhyloTree({ data, onClose, autoLoad, onAutoLoaded }) {
           {!treeData ? (
             <AlgoSelector onSelect={handleSelect} loading={loading} loadingMsg={loadingMsg} loadingPct={loadingPct}/>
           ) : (
-            <div style={{ position:'relative', width:'100%', height:'100%' }}>
+            (() => {
+              const leafCount = tree ? collectLeaves(tree).length : 0
+              const rectW = Math.round(size.w * zoom)
+              const rectH = Math.round(Math.max(canvasH, leafCount*20+50) * zoom)
+              const circD = Math.round(Math.min(size.w, canvasH+80) * zoom)
+              const wrapW = mode==='rect' ? rectW : mode==='circular' ? circD : size.w
+              const wrapH = mode==='rect' ? rectH : mode==='circular' ? circD : Math.max(canvasH,500)
+              return (
+            <div style={{ position:'relative', width:wrapW, height:wrapH }}>
               {mode==='rect' && tree && (
-                <RectTree root={tree} width={size.w} height={Math.max(canvasH, collectLeaves(tree).length*20+50)}
+                <RectTree root={tree} width={rectW} height={rectH}
                   highlight={highlight} onLeafClick={handleLeafClick} opts={opts}/>
               )}
               {mode==='circular' && tree && (
-                <CircularTree root={tree} width={Math.min(size.w,canvasH+80)} height={Math.min(size.w,canvasH+80)}
+                <CircularTree root={tree} width={circD} height={circD}
                   highlight={highlight} onLeafClick={handleLeafClick} opts={opts}/>
               )}
               {mode==='force' && graph && (
@@ -246,15 +273,18 @@ export default function PhyloTree({ data, onClose, autoLoad, onAutoLoaded }) {
                 />
               )}
               <DrawOverlay
-                width={size.w} height={Math.max(canvasH, mode==='rect'&&tree ? collectLeaves(tree).length*20+50 : 500)}
+                width={wrapW} height={wrapH}
                 shapes={annotGroups} setShapes={setAnnotGroupsAndNotify}
                 drawMode={drawMode} drawShape={drawShape}
                 activeColor={drawColor} opacity={drawOpacity}
               />
             </div>
+              )
+            })()
           )}
         </div>
         <PhyloSidebar
+          mode={mode}
           treeData={treeData} opts={opts} setOpts={setOpts}
           meta={meta} setMeta={setMeta}
           highlight={highlight} setHighlight={setHighlight}
