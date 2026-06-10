@@ -27,8 +27,8 @@ export function parseNewick(str) {
 }
 
 export function parseDistanceMatrix(text) {
-  const lines = text.trim().split('\n').filter(l => l.trim() && !l.startsWith('#'))
-  if (lines.length < 2) throw new Error('File has fewer than 2 lines')
+  const lines = text.trim().split(/\r\n|\r|\n/).filter(l => l.trim() && !l.startsWith('#'))
+  if (lines.length < 2) throw new Error('This file has fewer than 2 usable lines. A distance/profile matrix needs a header row plus at least one sample row. If this is a Newick tree, use "Load Newick" instead.')
   const sep       = lines[0].includes('\t') ? '\t' : ','
   const firstCell = lines[0].split(sep)[0].trim().toUpperCase()
   const isAllelic = firstCell === 'FILE' || firstCell === '' ||

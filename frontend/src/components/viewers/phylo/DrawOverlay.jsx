@@ -4,6 +4,7 @@ export default function DrawOverlay({ width, height, shapes, setShapes, drawMode
   const svgRef    = useRef()
   const isDrawing = useRef(false)
   const startPt   = useRef(null)
+  const uid = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`
   const [draft,     setDraft]     = useState(null)
   const [selected,  setSelected]  = useState(null)
   const [editLabel, setEditLabel] = useState('')
@@ -42,7 +43,7 @@ export default function DrawOverlay({ width, height, shapes, setShapes, drawMode
     const x2=Math.max(startPt.current.x,p.x), y2=Math.max(startPt.current.y,p.y)
     startPt.current = null
     if (x2-x1 < 6 && y2-y1 < 6) { setDraft(null); return }
-    const s = { id:Date.now(), type:drawShape, x1,y1,x2,y2, color:activeColor, opacity, label:'' }
+    const s = { id:uid(), type:drawShape, x1,y1,x2,y2, color:activeColor, opacity, label:'' }
     setShapes(prev=>[...prev,s])
     setSelected(s.id); setEditLabel('')
     setDraft(null)
@@ -50,7 +51,7 @@ export default function DrawOverlay({ width, height, shapes, setShapes, drawMode
 
   const placeText  = (text) => {
     if (!text?.trim() || !textPos) return
-    setShapes(prev=>[...prev,{ id:Date.now(), type:'text', x:textPos.x, y:textPos.y,
+    setShapes(prev=>[...prev,{ id:uid(), type:'text', x:textPos.x, y:textPos.y,
       color:activeColor, opacity:1, label:text, fontSize:15 }])
     setTextPos(null)
   }
@@ -65,7 +66,8 @@ export default function DrawOverlay({ width, height, shapes, setShapes, drawMode
     setSelected(s.id); setEditLabel(s.label||'')
   }
 
-  const selShape = shapes.find(s=>s.id===selected)
+  const safeShapes = (shapes||[]).filter(Boolean)
+  const selShape = safeShapes.find(s=>s.id===selected)
 
   const mkShape = (s, transparent=false) => {
     const cx=(s.x1+s.x2)/2, cy=(s.y1+s.y2)/2
@@ -100,7 +102,7 @@ export default function DrawOverlay({ width, height, shapes, setShapes, drawMode
         onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp}
         onTouchStart={onDown} onTouchEnd={onUp}
       >
-        {shapes.map(s => s.type==='text' ? (
+        {safeShapes.map(s => s.type==='text' ? (
           <text key={s.id} x={s.x} y={s.y} fill={s.color} fontSize={s.fontSize||15}
             fontWeight={700} fontFamily='"IBM Plex Sans",sans-serif'
             stroke="white" strokeWidth={3} paintOrder="stroke">{s.label}</text>
@@ -152,8 +154,8 @@ export default function DrawOverlay({ width, height, shapes, setShapes, drawMode
             const mx = e.clientX-rect.left, my = e.clientY-rect.top
             const dx = mx - dragRef.current.startX, dy = my - dragRef.current.startY
             const h  = dragRef.current.handle
-            setShapes(prev=>prev.map(s=>{
-              if (s.id !== dragRef.current.id) return s
+            setShapes(prev=>(prev||[]).map(s=>{
+              if (!s || !dragRef.current || s.id !== dragRef.current.id) return s
               if (s.type==='text') return { ...s, x:dragRef.current.ox+dx, y:dragRef.current.oy+dy }
               if (!h) return { ...s, x1:dragRef.current.ox+dx, y1:dragRef.current.oy+dy,
                             x2:dragRef.current.ox+dx+(dragRef.current.w||0),
@@ -171,7 +173,7 @@ export default function DrawOverlay({ width, height, shapes, setShapes, drawMode
           onMouseUp={()=>{ dragRef.current=null }}
           onMouseLeave={()=>{ dragRef.current=null }}
         >
-          {shapes.map(s => {
+          {safeShapes.map(s => {
             const makeDrag = (handle=null) => (e) => {
               e.stopPropagation()
               setSelected(s.id); setEditLabel(s.label||'')
@@ -265,4 +267,3 @@ export default function DrawOverlay({ width, height, shapes, setShapes, drawMode
 
 
 
-// Sidebar panel for annotations

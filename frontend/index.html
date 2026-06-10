@@ -3,12 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BioViewer — Sequence Viewer</title>
-    <meta name="description" content="High-performance genomic sequence viewer. FASTA, GenBank, FASTQ, GFF3, BED." />
+
+    <!-- Primary SEO -->
+    <title>AriaDNA — Browser-native genomic viewer</title>
+    <meta name="description" content="AriaDNA is a fast, private, browser-based genomic viewer for sequences (FASTA/GenBank), alignments, phylogenetic trees, distance matrices, Sanger chromatograms, VCF, SAM/BAM and BLAST. No install, no upload." />
+    <meta name="keywords" content="AriaDNA, genomic viewer, bioinformatics, FASTA viewer, GenBank, phylogenetic tree, Newick, distance matrix, MLST, Sanger AB1, VCF, BAM, BLAST, sequence alignment, browser" />
+    <meta name="author" content="AriaDNA" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://ariadna-bio.com/app" />
+
+    <!-- Open Graph (social sharing) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="AriaDNA" />
+    <meta property="og:title" content="AriaDNA — Browser-native genomic viewer" />
+    <meta property="og:description" content="Explore genomes, alignments, phylogenetic trees and matrices entirely in your browser. No install, no upload — your data never leaves your machine." />
+    <meta property="og:url" content="https://ariadna-bio.com/app" />
+    <meta property="og:image" content="https://ariadna-bio.com/assets/tree_viewer.png" />
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AriaDNA — Browser-native genomic viewer" />
+    <meta name="twitter:description" content="Sequences, alignments, trees, matrices, Sanger, VCF, BAM and BLAST — all in your browser." />
+    <meta name="twitter:image" content="https://ariadna-bio.com/assets/tree_viewer.png" />
+
+    <meta name="theme-color" content="#06102e" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+
+    <!-- Structured data: software application -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "AriaDNA",
+      "applicationCategory": "Bioinformatics / genomic visualization",
+      "operatingSystem": "Web browser",
+      "url": "https://ariadna-bio.com/app",
+      "description": "A fast, private, browser-native genomic viewer for sequences, alignments, phylogenetic trees, distance matrices, Sanger chromatograms, VCF, SAM/BAM and BLAST.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>AriaDNA is an interactive genomic viewer that requires JavaScript. Learn more at https://ariadna-bio.com</noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

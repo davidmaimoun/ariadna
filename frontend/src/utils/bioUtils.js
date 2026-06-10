@@ -2,7 +2,7 @@
 
 export function parseGFF3(text) {
   const features = []
-  const lines = text.split('\n')
+  const lines = text.split(/\r\n|\r|\n/)
   for (const line of lines) {
     if (line.startsWith('#') || !line.trim()) continue
     const cols = line.split('\t')
@@ -34,7 +34,7 @@ export function parseGFF3(text) {
 
 export function parseBED(text) {
   const features = []
-  const lines = text.split('\n')
+  const lines = text.split(/\r\n|\r|\n/)
   for (const line of lines) {
     if (line.startsWith('#') || line.startsWith('track') || line.startsWith('browser') || !line.trim()) continue
     const cols = line.split('\t')
@@ -57,7 +57,7 @@ export function parseBED(text) {
 
 export function parseGTF(text) {
   const features = []
-  const lines = text.split('\n')
+  const lines = text.split(/\r\n|\r|\n/)
   for (const line of lines) {
     if (line.startsWith('#') || !line.trim()) continue
     const cols = line.split('\t')

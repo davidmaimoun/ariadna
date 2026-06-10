@@ -60,7 +60,7 @@ export default function AnnotSidePanel({ annotGroups, setAnnotGroups, drawShape,
           <div style={{ fontSize:10, fontWeight:700, color:'var(--txt4)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:8 }}>
             Annotations ({annotGroups.length})
           </div>
-          {annotGroups.map(s=>(
+          {annotGroups.filter(Boolean).map(s=>(
             <div key={s.id} style={{ display:'flex', alignItems:'center', gap:7, padding:'5px 0', borderBottom:'1px solid var(--border2)' }}>
               <div style={{ width:12, height:12, borderRadius:s.type==='rect'?3:'50%', background:s.color, flexShrink:0 }}/>
               <span style={{ flex:1, fontSize:11.5, color:'var(--txt)', fontStyle:s.label?'normal':'italic', color:s.label?'var(--txt)':'var(--txt4)' }}>
@@ -77,6 +77,3 @@ export default function AnnotSidePanel({ annotGroups, setAnnotGroups, drawShape,
     </div>
   )
 }
-
-
-

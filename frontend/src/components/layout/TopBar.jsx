@@ -1,4 +1,4 @@
-import { Dna, Microscope, Grid3x3, GitBranch, HelpCircle } from 'lucide-react'
+import { Dna, Microscope, Grid3x3, GitBranch, HelpCircle, Mail } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useDocStore } from '../../store/useDocStore'
 import { TOOL_LIST } from '../../routes/toolRegistry'
@@ -85,6 +85,17 @@ export default function TopBar() {
           onMouseEnter={e => { e.currentTarget.style.background='#f0f4fa' }}
           onMouseLeave={e => { e.currentTarget.style.background='transparent' }}>
           <HelpCircle size={14}/> Help
+        </a>
+        <a href="/contact.html" title="Contact, report a bug or suggest a feature"
+          style={{
+            display:'flex', alignItems:'center', gap:6,
+            padding:'6px 13px', borderRadius:8, cursor:'pointer',
+            fontSize:13, fontWeight:700, color:'#4a6080', textDecoration:'none',
+            transition:'all .15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background='#f0f4fa' }}
+          onMouseLeave={e => { e.currentTarget.style.background='transparent' }}>
+          <Mail size={14}/> Contact
         </a>
       </nav>
     </header>

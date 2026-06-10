@@ -53,7 +53,11 @@ export default function PhyloTree({ data, onClose, autoLoad, onAutoLoaded }) {
   const [treeData,   setTreeData]   = useState(data||null)
 
   const handleSelectRef = useRef(null)              // points to latest handleSelect
-  const setAnnotGroupsAndNotify = setAnnotGroups    // plain setter alias
+  // Always keep the annotation array clean (no null/undefined) whatever the caller passes
+  const setAnnotGroupsAndNotify = (v) => setAnnotGroups(prev => {
+    const next = typeof v === 'function' ? v(prev || []) : v
+    return Array.isArray(next) ? next.filter(Boolean) : []
+  })
 
   // Auto-load when the autoLoad prop arrives (from the tool's Home picker)
   useEffect(() => {
@@ -99,7 +103,14 @@ export default function PhyloTree({ data, onClose, autoLoad, onAutoLoaded }) {
     try {
       const text  = typeof fileOrText === 'string' ? fileOrText : await fileOrText.text()
       const fname = fileNameArg || (typeof fileOrText === 'string' ? 'tree' : fileOrText.name)
-      if (type==='newick') {
+
+      // Safety auto-detect: a Newick tree always starts with '(' and ends with ');'.
+      // A distance/profile matrix never does. So if the content looks like Newick,
+      // parse it as a tree even if an algorithm button was clicked by mistake.
+      const looksNewick = /^\s*\(/.test(text) && /;\s*$/.test(text.trim())
+      const effectiveType = (type === 'newick' || looksNewick) ? 'newick' : 'matrix'
+
+      if (effectiveType==='newick') {
         const t = parseNewick(text)
         if (!t) throw new Error('Could not parse Newick')
         setTreeData({ tree:t, graph:null, filename:fname, algo:'newick' })
@@ -288,7 +299,7 @@ export default function PhyloTree({ data, onClose, autoLoad, onAutoLoaded }) {
           treeData={treeData} opts={opts} setOpts={setOpts}
           meta={meta} setMeta={setMeta}
           highlight={highlight} setHighlight={setHighlight}
-          annotGroups={annotGroups} setAnnotGroups={setAnnotGroups}
+          annotGroups={annotGroups} setAnnotGroups={setAnnotGroupsAndNotify}
           drawMode={drawMode} setDrawMode={setDrawMode}
           drawShape={drawShape} setDrawShape={setDrawShape}
           drawColor={drawColor} setDrawColor={setDrawColor}

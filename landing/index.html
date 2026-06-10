@@ -1,388 +1,1097 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AriaDNA — Genomics in your browser</title>
-<meta name="description" content="AriaDNA is a fast, private, browser-based genomic viewer. Sequences, alignments, phylogenetic trees, matrices, Sanger traces, VCF, BAM and BLAST — no install, no upload.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230a1640'/%3E%3Cpath d='M20 8C20 8 46 18 46 32C46 46 20 56 20 56' stroke='%232f7bff' stroke-width='4.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M44 8C44 8 18 18 18 32C18 46 44 56 44 56' stroke='%23ffb200' stroke-width='4.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --ink:#f3f6fc;--ink2:#ffffff;--panel:#ffffff;
-    --line:rgba(20,50,140,.12);--line2:rgba(20,50,140,.20);
-    --fog:#5a6b8c;--paper:#0f1f44;
-    --blue:#1a56db;--cyan:#0ea5d4;--gold:#e0930f;--gold2:#f0b429;
-    --violet:#7c3aed;--emerald:#0a9d6e;--amber:#d97706;
-    --radius:18px;--maxw:1180px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{background:var(--ink);color:var(--paper);font-family:'Archivo',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-  body::before{content:"";position:fixed;inset:0;z-index:-3;
-    background:
-      radial-gradient(1100px 700px at 80% -12%, rgba(26,86,219,.10), transparent 60%),
-      radial-gradient(900px 600px at 8% 6%, rgba(14,165,212,.08), transparent 55%),
-      radial-gradient(820px 700px at 50% 112%, rgba(224,147,15,.07), transparent 55%),
-      var(--ink);}
-  body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.025;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  /* Faint nucleotide trame behind everything */
-  .dna-bg{position:fixed;inset:0;z-index:-2;pointer-events:none;overflow:hidden;
-    opacity:.06;font-family:'JetBrains Mono',monospace;font-size:15px;line-height:2.05;
-    letter-spacing:.34em;white-space:pre-wrap;word-break:break-all;user-select:none;padding:14px 8px;
-    -webkit-mask-image:linear-gradient(180deg,transparent,#000 12%,#000 88%,transparent);
-    mask-image:linear-gradient(180deg,transparent,#000 12%,#000 88%,transparent)}
+  <!-- SEO -->
+  <title>AriaDNA — Browser-native genomic viewer</title>
+  <meta name="description" content="AriaDNA is a fast, private, browser-based genomic viewer: sequences (FASTA/GenBank), alignments, phylogenetic trees, distance matrices, Sanger chromatograms, VCF, SAM/BAM and BLAST. No install, no upload." />
+  <meta name="keywords" content="AriaDNA, genomic viewer, bioinformatics, FASTA, GenBank, phylogenetic tree, Newick, distance matrix, MLST, Sanger AB1, VCF, BAM, BLAST, alignment" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://ariadna-bio.com/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="AriaDNA" />
+  <meta property="og:title" content="AriaDNA — Browser-native genomic viewer" />
+  <meta property="og:description" content="Explore genomes, alignments, phylogenetic trees and matrices entirely in your browser. Your data never leaves your machine." />
+  <meta property="og:url" content="https://ariadna-bio.com/" />
+  <meta property="og:image" content="https://ariadna-bio.com/assets/tree_viewer.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AriaDNA — Browser-native genomic viewer" />
+  <meta name="twitter:description" content="Sequences, alignments, trees, matrices, Sanger, VCF, BAM and BLAST — all in your browser." />
+  <meta name="twitter:image" content="https://ariadna-bio.com/assets/tree_viewer.png" />
+  <meta name="theme-color" content="#06102e" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230a1640'/%3E%3Cpath d='M20 8C20 8 46 18 46 32C46 46 20 56 20 56' stroke='%232f7bff' stroke-width='4.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M44 8C44 8 18 18 18 32C18 46 44 56 44 56' stroke='%23ffb200' stroke-width='4.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" />
 
-  a{color:inherit;text-decoration:none}
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
-  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-.02em;line-height:1.05}
-  .mono{font-family:'JetBrains Mono',monospace}
-  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan)}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 
-  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
-    background:linear-gradient(to bottom,rgba(255,255,255,.92),rgba(255,255,255,.6));border-bottom:1px solid var(--line)}
-  .nav-in{display:flex;align-items:center;justify-content:space-between;height:68px}
-  .brand{display:flex;align-items:center;gap:12px;font-family:'Fraunces',serif;font-weight:700;font-size:21px;letter-spacing:-.02em}
-  .brand .ar{background:linear-gradient(90deg,#1a56db,#0ea5d4);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .brand .dna{background:linear-gradient(90deg,#f0b429,#d97706);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .nav-links{display:flex;align-items:center;gap:30px;font-size:14px;color:var(--fog)}
-  .nav-links a{transition:color .2s}.nav-links a:hover{color:var(--paper)}
-  .btn{display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:14px;padding:11px 20px;border-radius:12px;cursor:pointer;transition:transform .18s,box-shadow .18s,background .18s;border:none}
-  .btn-primary{background:linear-gradient(105deg,var(--blue),var(--cyan));color:#fff;box-shadow:0 8px 24px rgba(26,86,219,.28)}
-  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(26,86,219,.36)}
-  .btn-ghost{background:rgba(20,50,140,.05);color:var(--paper);border:1px solid var(--line2)}
-  .btn-ghost:hover{background:rgba(20,50,140,.10)}
-  @media(max-width:760px){.nav-links{display:none}}
+  <style>
+    /* ─── TOKENS ─── */
+    :root {
+      --ink:    #f3f6fc;
+      --line:   rgba(20, 50, 140, .12);
+      --line2:  rgba(20, 50, 140, .20);
+      --fog:    #5a6b8c;
+      --paper:  #0f1f44;
+      --blue:   #1a56db;
+      --cyan:   #0ea5d4;
+      --gold:   #e0930f;
+      --gold2:  #f0b429;
+      --violet: #7c3aed;
+      --emerald:#0a9d6e;
+      --amber:  #d97706;
+      --radius: 18px;
+      --maxw:   1180px;
+    }
 
-  .hero{position:relative;padding:90px 0 60px}
-  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
-  @media(max-width:920px){.hero-grid{grid-template-columns:1fr;gap:36px}}
-  .hero h1{font-size:clamp(44px,6vw,82px);font-weight:600}
-  .hero h1 em{font-style:italic;font-weight:500;background:linear-gradient(90deg,var(--gold2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .hero .lede{margin-top:22px;font-size:19px;color:var(--fog);max-width:34ch}
-  .hero-cta{display:flex;gap:14px;margin-top:34px;flex-wrap:wrap}
-  .pill-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
-  .pill{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--fog);border:1px solid var(--line);border-radius:999px;padding:6px 13px;background:rgba(20,50,140,.04)}
-  .pill b{color:var(--cyan);font-weight:600}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--ink);
+      color: var(--paper);
+      font-family: 'Archivo', sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
 
-  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
-  .reveal.in{opacity:1;transform:none}
-  .d1{transition-delay:.08s}.d2{transition-delay:.16s}.d3{transition-delay:.24s}.d4{transition-delay:.32s}
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      background:
+        radial-gradient(1100px 700px at 80% -12%, rgba(26, 86, 219, .10), transparent 60%),
+        radial-gradient(900px 600px at 8% 6%,    rgba(14, 165, 212, .08), transparent 55%),
+        radial-gradient(820px 700px at 50% 112%, rgba(224, 147, 15, .07), transparent 55%),
+        var(--ink);
+    }
 
-  /* preview frames hold a placeholder photo (swap for real screenshots) */
-  .shot{position:relative;background:linear-gradient(150deg,#dbe6fb,#eef3fc);overflow:hidden}
-  .shot img{width:100%;height:100%;object-fit:cover;display:block;opacity:.9}
-  .shot .hint{position:absolute;left:12px;bottom:10px;font-family:'JetBrains Mono',monospace;font-size:10px;
-    color:#1a3a7a;background:rgba(255,255,255,.85);border:1px solid var(--line2);padding:4px 9px;border-radius:7px;backdrop-filter:blur(4px)}
-  .shot::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 70%,rgba(20,40,90,.12))}
+    .dna-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      overflow: hidden;
+      opacity: .06;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      line-height: 2.05;
+      letter-spacing: .34em;
+      white-space: pre-wrap;
+      word-break: break-all;
+      user-select: none;
+      padding: 14px 8px;
+      -webkit-mask-image: linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent);
+              mask-image: linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent);
+    }
 
-  .helix-card{position:relative;border:1px solid var(--line2);border-radius:24px;overflow:hidden;
-    background:#ffffff;box-shadow:0 30px 70px rgba(20,50,120,.18)}
-  .helix-card .head{display:flex;align-items:center;gap:8px;padding:16px 18px;border-bottom:1px solid var(--line)}
-  .dot{width:11px;height:11px;border-radius:50%}
-  .tabline{margin-left:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fog)}
-  .helix-card .shot{height:320px}
-  .float{animation:float 7s ease-in-out infinite}
-  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
 
-  section{padding:74px 0}
-  .sec-head{max-width:60ch;margin-bottom:46px}
-  .sec-head h2{font-size:clamp(30px,4vw,46px);margin-top:14px}
-  .sec-head p{color:var(--fog);font-size:17px;margin-top:14px}
+    h1, h2, h3 {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      letter-spacing: -.02em;
+      line-height: 1.08;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      letter-spacing: .32em;
+      text-transform: uppercase;
+      color: var(--cyan);
+    }
 
-  .tools{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
-  @media(max-width:820px){.tools{grid-template-columns:1fr}}
-  .tool{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#ffffff;transition:transform .25s,border-color .25s,box-shadow .25s}
-  .tool:hover{transform:translateY(-5px);border-color:var(--line2);box-shadow:0 22px 44px rgba(20,50,120,.16)}
-  .tool .shot{height:190px;border-bottom:1px solid var(--line)}
-  .tool .body{padding:20px 22px 24px}
-  .tool .tag{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
-  .tool h3{font-size:23px;margin:8px 0 9px}
-  .tool p{color:var(--fog);font-size:14.5px}
-  .tool .files{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fog);opacity:.8}
+    /* ─── NAV ─── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(255, 255, 255, .92), rgba(255, 255, 255, .6));
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-in {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 68px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 21px;
+      letter-spacing: -.02em;
+    }
+    .brand .ar  { background: linear-gradient(90deg, #1a56db, #0ea5d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .brand .dna { background: linear-gradient(90deg, #f0b429, #d97706); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      font-size: 14px;
+      color: var(--fog);
+    }
+    .nav-links a { transition: color .2s; }
+    .nav-links a:hover { color: var(--paper); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 11px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: none;
+      transition: transform .18s, box-shadow .18s, background .18s;
+    }
+    .btn-primary {
+      background: linear-gradient(105deg, var(--blue), var(--cyan));
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(26, 86, 219, .28);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(26, 86, 219, .36); }
+    .btn-ghost {
+      background: rgba(20, 50, 140, .05);
+      color: var(--paper);
+      border: 1px solid var(--line2);
+    }
+    .btn-ghost:hover { background: rgba(20, 50, 140, .10); }
+    @media (max-width: 760px) { .nav-links a:not(.btn) { display: none; } }
 
-  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-  @media(max-width:820px){.feat{grid-template-columns:1fr}}
-  .fcard{border:1px solid var(--line);border-radius:var(--radius);padding:26px;background:#ffffff}
-  .fcard .ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;margin-bottom:16px;background:linear-gradient(140deg,rgba(47,123,255,.25),rgba(40,224,255,.18));border:1px solid var(--line2)}
-  .fcard h3{font-size:20px;margin-bottom:8px}
-  .fcard p{color:var(--fog);font-size:14.5px}
+    /* ─── HERO ─── */
+    .hero { position: relative; padding: 90px 0 64px; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.02fr .98fr;
+      gap: 48px;
+      align-items: center;
+    }
+    @media (max-width: 920px) { .hero-grid { grid-template-columns: 1fr; gap: 36px; } }
+    .hero h1 { font-size: clamp(44px, 6vw, 82px); }
+    .hero h1 em {
+      font-style: italic;
+      font-weight: 500;
+      background: linear-gradient(90deg, var(--gold2), var(--gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero .lede { margin-top: 22px; font-size: 19px; color: var(--fog); max-width: 34ch; }
+    .hero-cta { display: flex; gap: 14px; margin-top: 34px; flex-wrap: wrap; }
+    .pill-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 30px; }
+    .pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--fog);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 13px;
+      background: rgba(20, 50, 140, .04);
+    }
+    .pill b { color: var(--cyan); font-weight: 600; }
 
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;counter-reset:s}
-  @media(max-width:820px){.steps{grid-template-columns:1fr}}
-  .step{position:relative;padding-top:18px}
-  .step::before{counter-increment:s;content:"0" counter(s);font-family:'Fraunces',serif;font-size:54px;font-weight:600;background:linear-gradient(120deg,var(--gold2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1}
-  .step h3{font-size:21px;margin:12px 0 8px}
-  .step p{color:var(--fog);font-size:15px}
+    .hero-card {
+      position: relative;
+      border: 1px solid var(--line2);
+      border-radius: 22px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 30px 70px rgba(20, 50, 120, .18);
+    }
+    .hero-card .ms-bar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 14px 16px;
+      background: #f3f6fc;
+      border-bottom: 1px solid var(--line);
+    }
+    .hero-video-wrap {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      background: linear-gradient(150deg, #dbe6fb, #eef3fc);
+    }
+    .hero-video-wrap video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .hero-expand {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 13px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12.5px;
+      background: rgba(6, 16, 46, .82);
+      color: #fff;
+      backdrop-filter: blur(4px);
+    }
+    .hero-expand:hover { background: rgba(6, 16, 46, .95); }
+    .float { animation: float 7s ease-in-out infinite; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-  .band{border:1px solid var(--line2);border-radius:28px;padding:60px 40px;text-align:center;background:linear-gradient(150deg,#eaf1fe,#ffffff);position:relative;overflow:hidden}
-  .band h2{font-size:clamp(30px,4.5vw,52px)}
-  .band p{color:var(--fog);font-size:18px;margin:16px auto 30px;max-width:46ch}
+    /* ─── REVEAL ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity .7s cubic-bezier(.2, .7, .2, 1), transform .7s cubic-bezier(.2, .7, .2, 1);
+    }
+    .reveal.in { opacity: 1; transform: none; }
+    .d1 { transition-delay: .08s; }
+    .d2 { transition-delay: .16s; }
+    .d3 { transition-delay: .24s; }
+    .d4 { transition-delay: .32s; }
 
-  footer{border-top:1px solid var(--line);padding:50px 0 60px;margin-top:30px}
-  .foot{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;color:var(--fog);font-size:14px}
-  .foot a{transition:color .2s}.foot a:hover{color:var(--paper)}
-  .foot-col h4{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px}
-  .foot-col a{display:block;margin-bottom:9px}
-  .badge{display:inline-flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--emerald);border:1px solid rgba(55,224,166,.35);background:rgba(55,224,166,.08);padding:5px 11px;border-radius:999px}
-</style>
+    /* ─── SECTION HEAD ─── */
+    section { padding: 74px 0; }
+    .sec-head { max-width: 60ch; margin: 0 auto 54px; text-align: center; }
+    .sec-head h2 { font-size: clamp(30px, 4vw, 46px); margin-top: 14px; }
+    .sec-head p { color: var(--fog); font-size: 17px; margin-top: 14px; }
+
+    /* ─── PROJECT ROWS ─── */
+    .prow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 54px;
+      align-items: center;
+      max-width: 1080px;
+      margin: 0 auto 92px;
+    }
+    .prow.reverse { direction: rtl; }
+    .prow.reverse > * { direction: ltr; }
+    @media (max-width: 900px) {
+      .prow,
+      .prow.reverse { grid-template-columns: 1fr; gap: 28px; direction: ltr; }
+    }
+    .prow-idx {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      letter-spacing: .2em;
+      color: var(--cyan);
+      margin-bottom: 10px;
+    }
+    .prow-title {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(26px, 3.4vw, 38px);
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--paper);
+    }
+    .prow-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+    .ptag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--fog);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 10px;
+      background: rgba(20, 50, 140, .03);
+    }
+    .prow-desc { font-size: 16px; color: var(--fog); margin-bottom: 14px; line-height: 1.65; }
+    .prow-pts { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+    .prow-pts li { position: relative; padding-left: 24px; font-size: 14.5px; color: #33436b; }
+    .prow-pts li::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 9px;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+    }
+    .prow-stack { display: flex; flex-wrap: wrap; gap: 8px; }
+    .badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+    }
+    .badge.sky     { background: #e6f2ff; color: #0369a1; border-color: #bfe0ff; }
+    .badge.blue    { background: #e7eeff; color: #1d4ed8; border-color: #c5d4ff; }
+    .badge.teal    { background: #e0f5f1; color: #0f766e; border-color: #b6e6dd; }
+    .badge.emerald { background: #e6f7ee; color: #0a9d6e; border-color: #bdecd4; }
+    .badge.amber   { background: #fdf0db; color: #b45309; border-color: #f6dcae; }
+    .badge.violet  { background: #f1ebff; color: #7c3aed; border-color: #ddd0fb; }
+
+    .mockup-screen {
+      border: 1px solid var(--line2);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 24px 60px rgba(20, 50, 120, .16);
+    }
+    .ms-bar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 11px 14px;
+      background: #f3f6fc;
+      border-bottom: 1px solid var(--line);
+    }
+    .msd { width: 11px; height: 11px; border-radius: 50%; background: #cdd8ea; }
+    .msd:nth-child(1) { background: #ff5f57; }
+    .msd:nth-child(2) { background: #febc2e; }
+    .msd:nth-child(3) { background: #28c840; }
+    .ms-url {
+      margin-left: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--fog);
+    }
+    .ms-shot {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      background: linear-gradient(150deg, #dbe6fb, #eef3fc);
+      display: grid;
+      place-items: center;
+    }
+    .ms-shot img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+    .shot-ph { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #7c93bd; }
+
+    .prow-actions { display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+    .btn-site,
+    .video-play-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 11px 18px;
+      border-radius: 11px;
+      cursor: pointer;
+      border: none;
+      transition: transform .18s, box-shadow .18s, background .18s;
+    }
+    .btn-site {
+      background: linear-gradient(105deg, var(--blue), var(--cyan));
+      color: #fff;
+      box-shadow: 0 8px 22px rgba(26, 86, 219, .26);
+    }
+    .btn-site:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(26, 86, 219, .34); }
+    .video-play-btn {
+      background: rgba(20, 50, 140, .05);
+      color: var(--paper);
+      border: 1px solid var(--line2);
+    }
+    .video-play-btn:hover { background: rgba(20, 50, 140, .1); }
+    .bs-icon, .vp-icon { font-size: 12px; }
+
+    /* ─── FEATURES ─── */
+    .feat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    @media (max-width: 820px) { .feat { grid-template-columns: 1fr; } }
+    .fcard {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 26px;
+      background: #fff;
+    }
+    .fcard .ic {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 16px;
+      background: linear-gradient(140deg, rgba(47, 123, 255, .25), rgba(40, 224, 255, .18));
+      border: 1px solid var(--line2);
+    }
+    .fcard h3 { font-size: 20px; margin-bottom: 8px; }
+    .fcard p  { color: var(--fog); font-size: 14.5px; }
+
+    /* ─── QUICK START ─── */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; counter-reset: s; }
+    @media (max-width: 820px) { .steps { grid-template-columns: 1fr; } }
+    .step { position: relative; padding-top: 18px; }
+    .step::before {
+      counter-increment: s;
+      content: "0" counter(s);
+      font-family: 'Fraunces', serif;
+      font-size: 54px;
+      font-weight: 600;
+      line-height: 1;
+      background: linear-gradient(120deg, var(--gold2), var(--gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .step h3 { font-size: 21px; margin: 12px 0 8px; }
+    .step p  { color: var(--fog); font-size: 15px; }
+
+    /* ─── CTA BAND ─── */
+    .band {
+      border: 1px solid var(--line2);
+      border-radius: 28px;
+      padding: 60px 40px;
+      text-align: center;
+      background: linear-gradient(150deg, #eaf1fe, #ffffff);
+      position: relative;
+      overflow: hidden;
+    }
+    .band h2 { font-size: clamp(30px, 4.5vw, 52px); }
+    .band p  { color: var(--fog); font-size: 18px; margin: 16px auto 30px; max-width: 46ch; }
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--emerald);
+      border: 1px solid rgba(10, 157, 110, .35);
+      background: rgba(10, 157, 110, .08);
+      padding: 5px 11px;
+      border-radius: 999px;
+    }
+
+    /* ─── FOOTER ─── */
+    footer { border-top: 1px solid var(--line); padding: 50px 0 60px; margin-top: 30px; }
+    .foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 30px;
+      flex-wrap: wrap;
+      color: var(--fog);
+      font-size: 14px;
+    }
+    .foot a:hover { color: var(--paper); }
+    .foot-col h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 14px;
+    }
+    .foot-col a { display: block; margin-bottom: 9px; }
+
+    /* ─── VIDEO MODAL ─── */
+    #demo-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(6, 16, 46, .72);
+      backdrop-filter: blur(6px);
+      padding: 24px;
+    }
+    #demo-modal.open { display: flex; }
+    #demo-modal .dm-box {
+      width: min(960px, 100%);
+      background: #06102e;
+      border: 1px solid var(--line2);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 40px 90px rgba(0, 0, 0, .5);
+    }
+    #demo-modal .dm-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(140, 180, 255, .18);
+    }
+    #demo-modal .dm-title { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #aebedd; }
+    #demo-modal .dm-close { background: none; border: none; color: #aebedd; font-size: 22px; cursor: pointer; line-height: 1; }
+    #demo-modal .dm-body { aspect-ratio: 16 / 9; background: #000; }
+    #demo-modal .dm-body video,
+    #demo-modal .dm-body iframe { width: 100%; height: 100%; border: none; display: block; }
+  </style>
 </head>
+
 <body>
 
-<div class="dna-bg" id="dnaBg" aria-hidden="true"></div>
+  <div class="dna-bg" id="dnaBg" aria-hidden="true"></div>
 
-<nav>
-  <div class="wrap nav-in">
-    <a class="brand" href="#top">
-      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
-        <defs>
-          <linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#90d0ff"/><stop offset="1" stop-color="#2f7bff"/></linearGradient>
-          <linearGradient id="lg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe066"/><stop offset="1" stop-color="#ffb200"/></linearGradient>
-        </defs>
-        <rect width="64" height="64" rx="15" fill="#0a1640" stroke="rgba(140,180,255,.25)"/>
-        <path d="M20 8C20 8,46 18,46 32C46 46,20 56,20 56" stroke="url(#lg1)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-        <path d="M44 8C44 8,18 18,18 32C18 46,44 56,44 56" stroke="url(#lg2)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-        <line x1="22" y1="15" x2="42" y2="19" stroke="rgba(255,255,255,.6)" stroke-width="2.6" stroke-linecap="round"/>
-        <line x1="21" y1="32" x2="43" y2="32" stroke="rgba(255,255,255,.75)" stroke-width="2.6" stroke-linecap="round"/>
-        <line x1="22" y1="49" x2="42" y2="45" stroke="rgba(255,255,255,.6)" stroke-width="2.6" stroke-linecap="round"/>
-      </svg>
-      <span><span class="ar">Aria</span><span class="dna">DNA</span></span>
-    </a>
-    <div class="nav-links">
-      <a href="#tools">Tools</a>
-      <a href="#features">Features</a>
-      <a href="#start">Quick start</a>
-      <a href="/docs.html">Docs</a>
-      <a class="btn btn-primary" href="/app">Launch app →</a>
+  <!-- NAV -->
+  <nav>
+    <div class="wrap nav-in">
+      <a class="brand" href="#top">
+        <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+          <rect width="64" height="64" rx="15" fill="#0a1640" stroke="rgba(140,180,255,.25)" />
+          <path d="M20 8C20 8,46 18,46 32C46 46,20 56,20 56" stroke="#2f7bff" stroke-width="4.5" fill="none" stroke-linecap="round" />
+          <path d="M44 8C44 8,18 18,18 32C18 46,44 56,44 56" stroke="#ffb200" stroke-width="4.5" fill="none" stroke-linecap="round" />
+          <line x1="22" y1="15" x2="42" y2="19" stroke="rgba(255,255,255,.6)" stroke-width="2.6" stroke-linecap="round" />
+          <line x1="21" y1="32" x2="43" y2="32" stroke="rgba(255,255,255,.75)" stroke-width="2.6" stroke-linecap="round" />
+          <line x1="22" y1="49" x2="42" y2="45" stroke="rgba(255,255,255,.6)" stroke-width="2.6" stroke-linecap="round" />
+        </svg>
+        <span><span class="ar">Aria</span><span class="dna">DNA</span></span>
+      </a>
+      <div class="nav-links">
+        <a href="#tools">Tools</a>
+        <a href="#features">Features</a>
+        <a href="#start">Quick start</a>
+        <a href="/docs.html">Docs</a>
+        <a href="/contact.html">Contact</a>
+        <a class="btn btn-primary" href="/app">Launch app →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow reveal in">Browser-native genomics</div>
+        <h1 class="reveal in d1" style="margin-top:18px">
+          Explore genomes.<br /><em>Nothing to install.</em>
+        </h1>
+        <p class="lede reveal in d2">
+          AriaDNA opens sequences, alignments, phylogenetic trees, distance matrices,
+          Sanger traces and variant files — entirely in your browser. Your data never
+          leaves your machine.
+        </p>
+        <div class="hero-cta reveal in d3">
+          <a class="btn btn-primary" href="/app">Launch AriaDNA →</a>
+          <a class="btn btn-ghost" href="#tools">Explore the tools</a>
+        </div>
+        <div class="pill-row reveal in d4">
+          <span class="pill"><b>multi</b> viewers</span>
+          <span class="pill"><b>0</b> uploads</span>
+          <span class="pill"><b>100%</b> client-side</span>
+          <span class="pill">multi-document <b>tabs</b></span>
+        </div>
+      </div>
+
+      <div class="hero-card float reveal in d2">
+        <div class="ms-bar">
+          <span class="msd"></span><span class="msd"></span><span class="msd"></span>
+          <span class="ms-url mono">ariadna-bio.com/app</span>
+        </div>
+        <div class="hero-video-wrap">
+          <video id="hero-video"
+                 src="/assets/hero-demo.mp4"
+                 poster="/assets/tree_viewer.png"
+                 autoplay muted loop playsinline preload="metadata"></video>
+          <button class="hero-expand" id="hero-expand" data-video="/assets/hero-demo.mp4" data-title="AriaDNA — full demo">
+            <span>⤢</span><span>Watch demo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- TOOLS -->
+  <section id="tools">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="eyebrow">The toolkit</div>
+        <h2>One workspace, multiple viewers.</h2>
+        <p>
+          Open as many files as you like in parallel tabs — a tree here, a matrix there,
+          a genome alongside. Every viewer shares the same layout: a toolbar, the canvas,
+          and a collapsible side panel.
+        </p>
+      </div>
+
+      <!-- 01 SEQUENCE -->
+      <div class="prow reveal">
+        <div class="prow-info">
+          <div class="prow-idx">01</div>
+          <h3 class="prow-title">Sequence viewer</h3>
+          <div class="prow-tags">
+            <span class="ptag">FASTA</span>
+            <span class="ptag">GenBank</span>
+            <span class="ptag">genome</span>
+          </div>
+          <p class="prow-desc">Pan and zoom across whole genomes, from the contig overview down to a single base.</p>
+          <ul class="prow-pts">
+            <li>Color-coded A/T/G/C with live amino-acid translation</li>
+            <li>GenBank feature tracks, GC content and ORF detection</li>
+            <li>Multi-FASTA contig switching and motif search</li>
+            <li>Export FASTA selections or GFF3 features</li>
+          </ul>
+          <div class="prow-stack">
+            <span class="badge sky">.fasta</span>
+            <span class="badge sky">.fa</span>
+            <span class="badge teal">.gb</span>
+            <span class="badge teal">.gbk</span>
+          </div>
+        </div>
+        <div class="prow-visual">
+          <div class="mockup-screen">
+            <div class="ms-bar">
+              <span class="msd"></span><span class="msd"></span><span class="msd"></span>
+              <span class="ms-url">ariadna-bio.com/app/sequence</span>
+            </div>
+            <div class="ms-shot">
+              <span class="shot-ph">/assets/seq_viewer_cut.png</span>
+              <img src="/assets/seq_viewer_cut.png" alt="AriaDNA sequence viewer" loading="lazy" onerror="this.remove()" />
+            </div>
+          </div>
+          <div class="prow-actions">
+            <a class="btn-site" href="/app/sequence"><span class="bs-icon">↗</span><span>Open in app</span></a>
+            <button class="video-play-btn" data-video="" data-title="Sequence viewer demo">
+              <span class="vp-icon">▶</span><span class="vp-label">Watch demo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 02 ALIGNMENT -->
+      <div class="prow reverse reveal">
+        <div class="prow-info">
+          <div class="prow-idx">02</div>
+          <h3 class="prow-title">Multiple sequence alignment</h3>
+          <div class="prow-tags">
+            <span class="ptag">MSA</span>
+            <span class="ptag">conservation</span>
+            <span class="ptag">consensus</span>
+          </div>
+          <p class="prow-desc">Inspect alignments with color-coded columns and per-column conservation at a glance.</p>
+          <ul class="prow-pts">
+            <li>Smooth scrolling across thousands of columns</li>
+            <li>Conservation bar and consensus row</li>
+            <li>Zoom from overview to single residue</li>
+            <li>Gaps and mismatches shown distinctly</li>
+          </ul>
+          <div class="prow-stack">
+            <span class="badge sky">.afa</span>
+            <span class="badge sky">.aln</span>
+            <span class="badge teal">.msa</span>
+          </div>
+        </div>
+        <div class="prow-visual">
+          <div class="mockup-screen">
+            <div class="ms-bar">
+              <span class="msd"></span><span class="msd"></span><span class="msd"></span>
+              <span class="ms-url">ariadna-bio.com/app/msa</span>
+            </div>
+            <div class="ms-shot">
+              <span class="shot-ph">/assets/multi_al.png</span>
+              <img src="/assets/multi_al.png" alt="AriaDNA alignment viewer" loading="lazy" onerror="this.remove()" />
+            </div>
+          </div>
+          <div class="prow-actions">
+            <a class="btn-site" href="/app/sequence"><span class="bs-icon">↗</span><span>Open in app</span></a>
+            <button class="video-play-btn" data-video="" data-title="Alignment demo">
+              <span class="vp-icon">▶</span><span class="vp-label">Watch demo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 03 TREE -->
+      <div class="prow reveal">
+        <div class="prow-info">
+          <div class="prow-idx">03</div>
+          <h3 class="prow-title">Phylogenetic tree</h3>
+          <div class="prow-tags">
+            <span class="ptag">phylogenetics</span>
+            <span class="ptag">MLST</span>
+            <span class="ptag">clustering</span>
+          </div>
+          <p class="prow-desc">Build a tree from a distance matrix, or load a Newick tree — with iTOL-style rendering.</p>
+          <ul class="prow-pts">
+            <li>Neighbor-Joining, UPGMA, MST (Kruskal/Prim) and GoeBURST</li>
+            <li>Rectangular, circular and force layouts</li>
+            <li>Color tips by metadata, with legend and a distance scale bar</li>
+            <li>Annotate clades and export the figure</li>
+          </ul>
+          <div class="prow-stack">
+            <span class="badge violet">.nwk</span>
+            <span class="badge violet">.tre</span>
+            <span class="badge teal">.tsv</span>
+            <span class="badge teal">.csv</span>
+          </div>
+        </div>
+        <div class="prow-visual">
+          <div class="mockup-screen">
+            <div class="ms-bar">
+              <span class="msd"></span><span class="msd"></span><span class="msd"></span>
+              <span class="ms-url">ariadna-bio.com/app/tree</span>
+            </div>
+            <div class="ms-shot">
+              <span class="shot-ph">/assets/tree_viewer.png</span>
+              <img src="/assets/tree_viewer.png" alt="AriaDNA phylogenetic tree viewer" loading="lazy" onerror="this.remove()" />
+            </div>
+          </div>
+          <div class="prow-actions">
+            <a class="btn-site" href="/app/tree"><span class="bs-icon">↗</span><span>Open in app</span></a>
+            <button class="video-play-btn" data-video="" data-title="Tree demo">
+              <span class="vp-icon">▶</span><span class="vp-label">Watch demo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 04 MATRIX -->
+      <div class="prow reverse reveal">
+        <div class="prow-info">
+          <div class="prow-idx">04</div>
+          <h3 class="prow-title">Distance &amp; allelic matrix</h3>
+          <div class="prow-tags">
+            <span class="ptag">heatmap</span>
+            <span class="ptag">table</span>
+            <span class="ptag">presence/absence</span>
+          </div>
+          <p class="prow-desc">View a matrix three ways — sortable table, color heatmap, or presence/absence.</p>
+          <ul class="prow-pts">
+            <li>Switchable colorscales and cell sizing</li>
+            <li>Sort and filter rows, reorder columns</li>
+            <li>Threshold-based presence/absence view</li>
+            <li>Export a publication-ready PNG</li>
+          </ul>
+          <div class="prow-stack">
+            <span class="badge amber">.tsv</span>
+            <span class="badge amber">.csv</span>
+            <span class="badge teal">.tab</span>
+          </div>
+        </div>
+        <div class="prow-visual">
+          <div class="mockup-screen">
+            <div class="ms-bar">
+              <span class="msd"></span><span class="msd"></span><span class="msd"></span>
+              <span class="ms-url">ariadna-bio.com/app/matrix</span>
+            </div>
+            <div class="ms-shot">
+              <span class="shot-ph">/assets/heatmap.png</span>
+              <img src="/assets/heatmap.png" alt="AriaDNA matrix heatmap" loading="lazy" onerror="this.remove()" />
+            </div>
+          </div>
+          <div class="prow-actions">
+            <a class="btn-site" href="/app/matrix"><span class="bs-icon">↗</span><span>Open in app</span></a>
+            <button class="video-play-btn" data-video="" data-title="Matrix demo">
+              <span class="vp-icon">▶</span><span class="vp-label">Watch demo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 05 SANGER -->
+      <div class="prow reveal">
+        <div class="prow-info">
+          <div class="prow-idx">05</div>
+          <h3 class="prow-title">Sanger chromatogram</h3>
+          <div class="prow-tags">
+            <span class="ptag">AB1</span>
+            <span class="ptag">trace</span>
+            <span class="ptag">base calls</span>
+          </div>
+          <p class="prow-desc">Open AB1 traces, inspect the four-channel chromatogram, and correct base calls.</p>
+          <ul class="prow-pts">
+            <li>Four dye channels with quality scores</li>
+            <li>Click a base and retype to fix a miscall</li>
+            <li>Zoom into noisy regions and low-quality tails</li>
+            <li>Export the corrected read as FASTA</li>
+          </ul>
+          <div class="prow-stack">
+            <span class="badge emerald">.ab1</span>
+          </div>
+        </div>
+        <div class="prow-visual">
+          <div class="mockup-screen">
+            <div class="ms-bar">
+              <span class="msd"></span><span class="msd"></span><span class="msd"></span>
+              <span class="ms-url">ariadna-bio.com/app/sanger</span>
+            </div>
+            <div class="ms-shot">
+              <span class="shot-ph">/assets/sanger.png</span>
+              <img src="/assets/sanger.png" alt="AriaDNA Sanger chromatogram viewer" loading="lazy" onerror="this.remove()" />
+            </div>
+          </div>
+          <div class="prow-actions">
+            <a class="btn-site" href="/app/sanger"><span class="bs-icon">↗</span><span>Open in app</span></a>
+            <button class="video-play-btn" data-video="" data-title="Sanger demo">
+              <span class="vp-icon">▶</span><span class="vp-label">Watch demo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06 VARIANTS -->
+      <div class="prow reverse reveal">
+        <div class="prow-info">
+          <div class="prow-idx">06</div>
+          <h3 class="prow-title">VCF, SAM/BAM &amp; BLAST</h3>
+          <div class="prow-tags">
+            <span class="ptag">variants</span>
+            <span class="ptag">reads</span>
+            <span class="ptag">BLAST</span>
+          </div>
+          <p class="prow-desc">Triage variants, inspect read pileups, and browse BLAST hits — all in the browser.</p>
+          <ul class="prow-pts">
+            <li>VCF variants with type and quality filters</li>
+            <li>SAM/BAM read pileups and coverage</li>
+            <li>BLAST tabular / XML / JSON hits</li>
+            <li>Sort by identity and e-value</li>
+          </ul>
+          <div class="prow-stack">
+            <span class="badge sky">.vcf</span>
+            <span class="badge blue">.sam</span>
+            <span class="badge teal">.xml</span>
+            <span class="badge teal">.json</span>
+          </div>
+        </div>
+        <div class="prow-visual">
+          <div class="mockup-screen">
+            <div class="ms-bar">
+              <span class="msd"></span><span class="msd"></span><span class="msd"></span>
+              <span class="ms-url">ariadna-bio.com/app/vcf</span>
+            </div>
+            <div class="ms-shot">
+              <span class="shot-ph">/assets/vcf.png</span>
+              <img src="/assets/vcf.png" alt="AriaDNA VCF / BAM / BLAST viewer" loading="lazy" onerror="this.remove()" />
+            </div>
+          </div>
+          <div class="prow-actions">
+            <a class="btn-site" href="/app/sequence"><span class="bs-icon">↗</span><span>Open in app</span></a>
+            <button class="video-play-btn" data-video="" data-title="Variants demo">
+              <span class="vp-icon">▶</span><span class="vp-label">Watch demo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="eyebrow">Why it feels different</div>
+        <h2>Built for speed, privacy and flow.</h2>
+      </div>
+      <div class="feat">
+        <div class="fcard reveal">
+          <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5d4" stroke-width="2" stroke-linecap="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z" /></svg></div>
+          <h3>Runs in your browser</h3>
+          <p>Parsing and rendering happen client-side with Web Workers and canvas. No server round-trips, no waiting on uploads.</p>
+        </div>
+        <div class="fcard reveal d1">
+          <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a9d6e" stroke-width="2" stroke-linecap="round"><rect x="4" y="11" width="16" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg></div>
+          <h3>Private by design</h3>
+          <p>Your files stay on your device. Anonymous sessions live only in your browser and clear when you close the app.</p>
+        </div>
+        <div class="fcard reveal d2">
+          <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="6" rx="1" /><rect x="3" y="14" width="11" height="6" rx="1" /></svg></div>
+          <h3>Multi-document tabs</h3>
+          <p>Keep a tree, a matrix and a genome open at once. Switch instantly between every open document from one shared tab bar.</p>
+        </div>
+        <div class="fcard reveal">
+          <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7" /><path d="M21 4v5h-5" /></svg></div>
+          <h3>Survives a refresh</h3>
+          <p>Your open workspace is restored after an accidental reload, with sensible limits so storage never bloats.</p>
+        </div>
+        <div class="fcard reveal d1">
+          <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5d4" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg></div>
+          <h3>Search, filter, export</h3>
+          <p>Find motifs in sequences, filter variants and matrix rows, and export FASTA, GFF3, TSV or PNG straight from each viewer.</p>
+        </div>
+        <div class="fcard reveal d2">
+          <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round"><path d="M12 3v18" /><path d="m6 9 6-6 6 6" /></svg></div>
+          <h3>Consistent &amp; learnable</h3>
+          <p>Every viewer follows the same toolbar · canvas · side-panel layout, so the second tool feels familiar the moment you open it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK START -->
+  <section id="start">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="eyebrow">Quick start</div>
+        <h2>From file to figure in three steps.</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <h3>Pick a tool</h3>
+          <p>Open the app and choose Sequence, Tree, Matrix or Sanger from the home screen — or drag a file straight in.</p>
+        </div>
+        <div class="step reveal d1">
+          <h3>Open your file</h3>
+          <p>Select a local file. AriaDNA detects the format, parses it in the background and opens it in a new tab.</p>
+        </div>
+        <div class="step reveal d2">
+          <h3>Explore &amp; export</h3>
+          <p>Zoom, search, recolor and annotate. When it looks right, export a figure or a cleaned-up data file.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section>
+    <div class="wrap">
+      <div class="band reveal">
+        <span class="badge-live">● No account needed</span>
+        <h2 style="margin-top:18px">Open your first genome now.</h2>
+        <p>AriaDNA launches instantly in your browser. Bring a FASTA, a Newick tree or a distance matrix and start exploring.</p>
+        <a class="btn btn-primary" href="/app" style="font-size:16px;padding:14px 28px">Launch AriaDNA →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrap">
+      <div class="foot">
+        <div style="max-width:300px">
+          <a class="brand" href="#top" style="font-size:19px">
+            <span><span class="ar">Aria</span><span class="dna">DNA</span></span>
+          </a>
+          <p style="margin-top:14px;font-size:13.5px">
+            A fast, private, browser-native genomic viewer for sequences, alignments, trees and matrices.
+          </p>
+        </div>
+        <div class="foot-col">
+          <h4>Product</h4>
+          <a href="/app">Launch app</a>
+          <a href="#tools">Tools</a>
+          <a href="#features">Features</a>
+          <a href="#start">Quick start</a>
+        </div>
+        <div class="foot-col">
+          <h4>Tools</h4>
+          <a href="/app/sequence">Sequence &amp; GenBank</a>
+          <a href="/app/sequence">Alignment (MSA)</a>
+          <a href="/app/tree">Phylogenetic tree</a>
+          <a href="/app/matrix">Matrix / heatmap</a>
+          <a href="/app/sanger">Sanger trace</a>
+        </div>
+        <div class="foot-col">
+          <h4>About</h4>
+          <a href="/docs.html">Documentation</a>
+          <a href="/contact.html">Contact</a>
+          <a href="mailto:sudosudev@outlook.com">Email us</a>
+        </div>
+      </div>
+      <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--fog);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <span class="mono">© 2026 AriaDNA · Genomic Viewer</span>
+        <span class="mono">Powered by <a href="https://www.sudosudev.com" target="_blank" rel="noopener" style="color:var(--cyan)">sudosu.dev</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- VIDEO MODAL -->
+  <div id="demo-modal" aria-hidden="true">
+    <div class="dm-box">
+      <div class="dm-head">
+        <span class="dm-title" id="dm-title">Demo</span>
+        <button class="dm-close" id="dm-close" aria-label="Close">×</button>
+      </div>
+      <div class="dm-body" id="dm-body"></div>
     </div>
   </div>
-</nav>
 
-<header class="hero" id="top">
-  <div class="wrap hero-grid">
-    <div>
-      <div class="eyebrow reveal in">Browser-native genomics</div>
-      <h1 class="reveal in d1" style="margin-top:18px">Explore genomes.<br><em>Nothing to install.</em></h1>
-      <p class="lede reveal in d2">AriaDNA opens sequences, alignments, phylogenetic trees, distance matrices, Sanger traces and variant files — entirely in your browser. Your data never leaves your machine.</p>
-      <div class="hero-cta reveal in d3">
-        <a class="btn btn-primary" href="/app">Launch AriaDNA →</a>
-        <a class="btn btn-ghost" href="#tools">Explore the tools</a>
-      </div>
-      <div class="pill-row reveal in d4">
-        <span class="pill"><b>multi</b> viewers</span>
-        <span class="pill"><b>0</b> uploads</span>
-        <span class="pill"><b>100%</b> client-side</span>
-        <span class="pill">multi-document <b>tabs</b></span>
-      </div>
-    </div>
+  <script>
+    // Reveal on scroll
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: .14 });
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 
-    <div class="helix-card float reveal in d2">
-      <div class="head">
-        <span class="dot" style="background:#ff5f57"></span>
-        <span class="dot" style="background:#febc2e"></span>
-        <span class="dot" style="background:#28c840"></span>
-        <span class="tabline mono">ariadna.com/app · tree · matrix · sequence</span>
-      </div>
-      <div class="shot">
-        <img src="/assets/tree_viewer.png" alt="App screenshot placeholder" loading="lazy" onerror="this.style.display='none'">
-      </div>
-    </div>
-  </div>
-</header>
+    // Faint nucleotide background
+    (function () {
+      const el = document.getElementById('dnaBg');
+      if (!el) return;
+      const cols = { A: '#0a9d6e', T: '#d14d6a', G: '#d97706', C: '#1a56db' };
+      const bases = 'ATGC';
+      let html = '';
+      for (let i = 0; i < 12000; i++) {
+        const b = bases[(Math.random() * 4) | 0];
+        html += '<span style="color:' + cols[b] + '">' + b + '</span>';
+        if (Math.random() < 0.07) html += '  ';
+      }
+      el.innerHTML = html;
+    })();
 
-<section id="tools">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="eyebrow">The toolkit</div>
-      <h2>One workspace, multiple viewers.</h2>
-      <p>Open as many files as you like in parallel tabs — a tree here, a matrix there, a genome alongside. Every viewer shares the same layout: a toolbar, the canvas, and a collapsible side panel.</p>
-    </div>
+    // Video modal (rows + hero)
+    (function () {
+      const modal = document.getElementById('demo-modal');
+      const body  = document.getElementById('dm-body');
+      const title = document.getElementById('dm-title');
 
-    <div class="tools">
+      const open = (src, label) => {
+        title.textContent = label || 'Demo';
+        const isEmbed = /youtube|youtu\.be|vimeo/.test(src);
+        body.innerHTML = isEmbed
+          ? '<iframe src="' + src + '" allow="autoplay; fullscreen" allowfullscreen></iframe>'
+          : '<video src="' + src + '" controls autoplay playsinline></video>';
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+      };
 
-      <article class="tool reveal">
-        <div class="shot">
-          <img src="/assets/seq_viewer_cut.png" alt="Sequence viewer placeholder" loading="lazy" onerror="this.style.display='none'">
-        </div>
-        <div class="body">
-          <div class="tag" style="color:var(--cyan)">Sequence</div>
-          <h3>FASTA &amp; GenBank viewer</h3>
-          <p>Pan and zoom across whole genomes, read individual bases, see annotations, GC content, ORFs and live translation. Multi-FASTA contigs switch with a click.</p>
-          <div class="files">.fasta · .fa · .fna · .gb · .gbk</div>
-        </div>
-      </article>
+      const openSoon = (label) => {
+        title.textContent = label || 'Demo';
+        body.innerHTML =
+          '<div style="aspect-ratio:16/9;display:grid;place-items:center;color:#aebedd;' +
+          'font-family:\'JetBrains Mono\',monospace;font-size:14px;text-align:center;padding:24px">' +
+          '🎬 Demo video coming soon</div>';
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+      };
 
-      <article class="tool reveal">
-        <div class="shot">
-          <img src="/assets/multi_al.png" alt="MSA placeholder" loading="lazy" onerror="this.style.display='none'">
-        </div>
-        <div class="body">
-          <div class="tag" style="color:var(--cyan)">Alignment</div>
-          <h3>Multiple sequence alignment</h3>
-          <p>Colored columns, consensus, and per-column conservation at a glance. Scroll thousands of columns smoothly; zoom from overview to single residue.</p>
-          <div class="files">.afa · .aln · .msa · aligned .fasta</div>
-        </div>
-      </article>
+      const close = () => {
+        modal.classList.remove('open');
+        body.innerHTML = '';
+        modal.setAttribute('aria-hidden', 'true');
+      };
 
-      <article class="tool reveal">
-        <div class="shot">
-          <img src="/assets/tree_viewer.png" alt="Tree placeholder" loading="lazy" onerror="this.style.display='none'">
-        </div>
-        <div class="body">
-          <div class="tag" style="color:var(--violet)">Phylogenetics</div>
-          <h3>Tree builder &amp; viewer</h3>
-          <p>Compute Neighbor-Joining, UPGMA, MST (Kruskal/Prim) and GoeBURST from a distance matrix — or load a Newick tree. Rectangular, circular and force layouts, with annotation overlays.</p>
-          <div class="files">.nwk · .tre · .tsv · .csv</div>
-        </div>
-      </article>
+      // Every play button stays visible; with a video → play it, without → "coming soon"
+      document.querySelectorAll('[data-video]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const src = btn.getAttribute('data-video');
+          const label = btn.getAttribute('data-title');
+          if (src) open(src, label);
+          else openSoon(label);
+        });
+      });
 
-      <article class="tool reveal">
-        <div class="shot">
-          <img src="/assets/heatmap.png" alt="Matrix placeholder" loading="lazy" onerror="this.style.display='none'">
-        </div>
-        <div class="body">
-          <div class="tag" style="color:var(--amber)">Matrix</div>
-          <h3>Distance &amp; allelic heatmaps</h3>
-          <p>Render distance or allelic-profile matrices as a heatmap, a sortable table, or presence/absence. Recolor, reorder, search rows, and export a publication-ready PNG.</p>
-          <div class="files">.tsv · .csv · .tab</div>
-        </div>
-      </article>
+      document.getElementById('dm-close').addEventListener('click', close);
+      modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    })();
 
-      <article class="tool reveal">
-        <div class="shot">
-          <img src="/assets/sanger.png" alt="Sanger placeholder" loading="lazy" onerror="this.style.display='none'">
-        </div>
-        <div class="body">
-          <div class="tag" style="color:var(--emerald)">Sanger</div>
-          <h3>Chromatogram viewer</h3>
-          <p>Open AB1 traces, inspect the four-channel chromatogram, read quality scores, and edit base calls. Export the corrected read as FASTA.</p>
-          <div class="files">.ab1</div>
-        </div>
-      </article>
-
-      <article class="tool reveal">
-        <div class="shot">
-          <img src="/assets/vcf.png" alt="VCF BAM BLAST placeholder" loading="lazy" onerror="this.style.display='none'">
-        </div>
-        <div class="body">
-          <div class="tag" style="color:var(--cyan)">Variants · Reads · BLAST</div>
-          <h3>VCF, SAM/BAM &amp; BLAST</h3>
-          <p>Triage variants with type and quality filters, inspect read pileups and coverage, and browse BLAST tabular / XML / JSON hits sorted by identity and e-value.</p>
-          <div class="files">.vcf · .sam · .tsv · .xml · .json</div>
-        </div>
-      </article>
-
-    </div>
-  </div>
-</section>
-
-<section id="features">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="eyebrow">Why it feels different</div>
-      <h2>Built for speed, privacy and flow.</h2>
-    </div>
-    <div class="feat">
-      <div class="fcard reveal">
-        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5d4" stroke-width="2" stroke-linecap="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></div>
-        <h3>Runs in your browser</h3>
-        <p>Parsing and rendering happen client-side with Web Workers and canvas. No server round-trips, no waiting on uploads.</p>
-      </div>
-      <div class="fcard reveal d1">
-        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a9d6e" stroke-width="2" stroke-linecap="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-        <h3>Private by design</h3>
-        <p>Your files stay on your device. Anonymous sessions live only in your browser and clear when you close the app.</p>
-      </div>
-      <div class="fcard reveal d2">
-        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="11" height="6" rx="1"/></svg></div>
-        <h3>Multi-document tabs</h3>
-        <p>Keep a tree, a matrix and a genome open at once. Switch instantly between every open document from one shared tab bar.</p>
-      </div>
-      <div class="fcard reveal">
-        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></div>
-        <h3>Survives a refresh</h3>
-        <p>Your open workspace is restored after an accidental reload, with sensible limits so storage never bloats.</p>
-      </div>
-      <div class="fcard reveal d1">
-        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5d4" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
-        <h3>Search, filter, export</h3>
-        <p>Find motifs in sequences, filter variants and matrix rows, and export FASTA, GFF3, TSV or PNG straight from each viewer.</p>
-      </div>
-      <div class="fcard reveal d2">
-        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round"><path d="M12 3v18"/><path d="m6 9 6-6 6 6"/></svg></div>
-        <h3>Consistent &amp; learnable</h3>
-        <p>Every viewer follows the same toolbar · canvas · side-panel layout, so the second tool feels familiar the moment you open it.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="start">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <div class="eyebrow">Quick start</div>
-      <h2>From file to figure in three steps.</h2>
-    </div>
-    <div class="steps">
-      <div class="step reveal"><h3>Pick a tool</h3><p>Open the app and choose Sequence, Tree, Matrix or Sanger from the home screen — or drag a file straight in.</p></div>
-      <div class="step reveal d1"><h3>Open your file</h3><p>Select a local file. AriaDNA detects the format, parses it in the background and opens it in a new tab.</p></div>
-      <div class="step reveal d2"><h3>Explore &amp; export</h3><p>Zoom, search, recolor and annotate. When it looks right, export a figure or a cleaned-up data file.</p></div>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <div class="band reveal">
-      <span class="badge">● No account needed</span>
-      <h2 style="margin-top:18px">Open your first genome now.</h2>
-      <p>AriaDNA launches instantly in your browser. Bring a FASTA, a Newick tree or a distance matrix and start exploring.</p>
-      <a class="btn btn-primary" href="/app" style="font-size:16px;padding:14px 28px">Launch AriaDNA →</a>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="wrap">
-    <div class="foot">
-      <div style="max-width:300px">
-        <a class="brand" href="#top" style="font-size:19px"><span><span class="ar">Aria</span><span class="dna">DNA</span></span></a>
-        <p style="margin-top:14px;font-size:13.5px">A fast, private, browser-native genomic viewer for sequences, alignments, trees and matrices.</p>
-      </div>
-      <div class="foot-col"><h4>Product</h4><a href="/app">Launch app</a><a href="#tools">Tools</a><a href="#features">Features</a><a href="#start">Quick start</a></div>
-      <div class="foot-col"><h4>Tools</h4><a href="/app">Sequence &amp; GenBank</a><a href="/app">Alignment (MSA)</a><a href="/app">Phylogenetic tree</a><a href="/app">Matrix / heatmap</a><a href="/app">Sanger trace</a></div>
-      <div class="foot-col"><h4>About</h4><a href="/docs.html">Documentation</a><a href="#">Privacy</a><a href="mailto:sudosudev@outlook.com">Contact</a></div>
-    </div>
-    <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--fog);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px">
-      <span class="mono">© 2026 AriaDNA · Genomic Viewer</span>
-      <span class="mono">Powered by <a href="https://www.sudosudev.com" target="_blank" rel="noopener" style="color:var(--cyan)">sudosu.dev</a></span>
-    </div>
-  </div>
-</footer>
-
-<script>
-  const io = new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target) } })
-  },{threshold:.14});
-  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-
-  // Faint nucleotide background (A/T/G/C colored, very low opacity)
-  (function(){
-    const el = document.getElementById('dnaBg'); if(!el) return;
-    const cols = { A:'#0a9d6e', T:'#d14d6a', G:'#d97706', C:'#1a56db' };
-    const bases = 'ATGC';
-    let html = '';
-    for (let i = 0; i < 12000; i++){
-      const b = bases[(Math.random()*4)|0];
-      html += '<span style="color:' + cols[b] + '">' + b + '</span>';
-      if (Math.random() < 0.07) html += '  ';
-    }
-    el.innerHTML = html;
-  })();
-</script>
+    // Hero video graceful fallback (keep poster if mp4 missing)
+    (function () {
+      const v = document.getElementById('hero-video');
+      if (!v) return;
+      v.addEventListener('error', () => {
+        const wrap = v.parentElement;
+        wrap.style.backgroundImage = "url('/assets/tree_viewer.png')";
+        wrap.style.backgroundSize = 'cover';
+        wrap.style.backgroundPosition = 'top center';
+        v.remove();
+        const exp = document.getElementById('hero-expand');
+        if (exp) exp.style.display = 'none';
+      });
+    })();
+  </script>
 </body>
 </html>

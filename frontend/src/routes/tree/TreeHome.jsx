@@ -37,7 +37,7 @@ export default function TreeHome() {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, maxWidth:740, width:'100%' }}>
         {ALGOS.map(a => {
           const isNwk = a.id === 'nwk'
-          const accepts = isNwk ? '.nwk,.tre,.tree,.nex,.nexus' : '.tsv,.csv,.txt,.tab,.nwk,.tre,.tree'
+          const accepts = isNwk ? '.nwk,.tre,.tree,.nex,.nexus' : '.tsv,.csv,.txt,.tab'
           return (
             <div key={a.id} style={{ gridColumn: isNwk ? '1 / -1' : undefined }}>
               <input ref={el => refs.current[a.id]=el} type="file" accept={accepts} style={{ display:'none' }}
@@ -54,7 +54,7 @@ export default function TreeHome() {
                   <div style={{ fontSize:12.5, color:'#5a7ec0', lineHeight:1.45 }}>{a.desc}</div>
                   <div style={{ fontSize:11.5, color:a.color, fontWeight:600, marginTop:5 }}>
                     <FolderOpen size={10} style={{ display:'inline', verticalAlign:'middle', marginRight:3 }}/>
-                    {isNwk ? '.nwk .tre .tree .nex' : '.tsv .csv .txt · also .nwk'}
+                    {isNwk ? '.nwk .tre .tree .nex' : '.tsv .csv .txt .tab'}
                   </div>
                 </div>
               </button>

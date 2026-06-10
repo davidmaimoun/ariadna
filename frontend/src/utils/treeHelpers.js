@@ -1,7 +1,7 @@
 // Shared tree utility functions — used by PhyloTree sub-components
 
 export function parseMetadata(text) {
-  const lines = text.trim().split('\n').filter(l => l.trim())
+  const lines = text.trim().split(/\r\n|\r|\n/).filter(l => l.trim())
   if (lines.length < 2) return {}
   const sep  = lines[0].includes('\t') ? '\t' : ','
   const keys = lines[0].split(sep).slice(1).map(k => k.trim())

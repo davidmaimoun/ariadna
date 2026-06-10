@@ -49,6 +49,22 @@ export default function RectTree({ root, width, height, highlight, onLeafClick, 
         // horizontal from parent depth to child depth, then vertical connector
         ctx.beginPath(); ctx.moveTo(node._x, node._y); ctx.lineTo(child._x, node._y); ctx.stroke()
         ctx.beginPath(); ctx.moveTo(child._x, node._y); ctx.lineTo(child._x, child._y); ctx.stroke()
+
+        // branch-length label sits ON the horizontal segment, with a crisp white background
+        if (showBranchLen && child.length > 0 && (child._x - node._x) > 16) {
+          const midX = (node._x + child._x) / 2
+          const fs   = Math.max(8, branchFontSize)
+          const txt  = child.length.toFixed(3)
+          ctx.font = fs + 'px "JetBrains Mono",monospace'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'bottom'
+          const tw = ctx.measureText(txt).width
+          // opaque white pad so the number never blurs into the branch line
+          ctx.fillStyle = '#ffffff'
+          ctx.fillRect(midX - tw / 2 - 2, node._y - fs - 4, tw + 4, fs + 2)
+          ctx.fillStyle = '#46587a'
+          ctx.fillText(txt, midX, node._y - 3)
+        }
         dn(child)
       }
 
@@ -74,18 +90,18 @@ export default function RectTree({ root, width, height, highlight, onLeafClick, 
         ctx.beginPath(); ctx.arc(node._x, node._y, nodeSize*0.7, 0, Math.PI*2); ctx.fillStyle='#9aa6c0'; ctx.fill()
       }
 
-      // optional support value at internal node
-      if (showSupport && node.support!=null && !isLeaf) {
-        ctx.font = `${branchFontSize}px "JetBrains Mono",monospace`; ctx.fillStyle = '#8a93a8'
-        ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'
-        ctx.fillText(node.support, node._x-3, node._y-2)
-      }
-      // optional branch-length label
-      if (showBranchLen && node.length>0 && node._parentX!==undefined) {
-        const midX = (node._x + node._parentX) / 2
-        ctx.font = `${Math.max(7,branchFontSize)}px "JetBrains Mono",monospace`
-        ctx.fillStyle = '#9aa6c0'; ctx.textAlign='center'; ctx.textBaseline='bottom'
-        ctx.fillText(node.length.toFixed(3), midX, node._y-2)
+      // optional support value at internal node (crisp white background, no blur)
+      if (showSupport && node.support != null && !isLeaf) {
+        const fs  = Math.max(8, branchFontSize)
+        const txt = String(node.support)
+        ctx.font = fs + 'px "JetBrains Mono",monospace'
+        ctx.textAlign = 'right'
+        ctx.textBaseline = 'bottom'
+        const tw = ctx.measureText(txt).width
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(node._x - 4 - tw - 2, node._y - fs - 4, tw + 4, fs + 2)
+        ctx.fillStyle = '#7c3aed'
+        ctx.fillText(txt, node._x - 4, node._y - 3)
       }
     }
     dn(tree)
