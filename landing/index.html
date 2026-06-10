@@ -1033,10 +1033,28 @@
 
     // Video modal (rows + hero)
     (function () {
+      // Sync the hero "Watch demo" button to whatever video is actually playing,
+      // so the modal works no matter what the hero file is named.
+      const hv  = document.getElementById('hero-video');
+      const hx  = document.getElementById('hero-expand');
+      if (hv && hx) {
+        const sync = () => hx.setAttribute('data-video', hv.currentSrc || hv.src || '');
+        sync();
+        hv.addEventListener('loadeddata', sync);
+        hv.addEventListener('error', () => {
+          // mp4 missing → keep the poster, hide the expand button
+          const wrap = hv.parentElement;
+          wrap.style.backgroundImage = "url('/assets/tree_viewer.png')";
+          wrap.style.backgroundSize = 'cover';
+          wrap.style.backgroundPosition = 'top center';
+          hv.remove();
+          hx.style.display = 'none';
+        });
+      }
+
       const modal = document.getElementById('demo-modal');
       const body  = document.getElementById('dm-body');
       const title = document.getElementById('dm-title');
-
       const open = (src, label) => {
         title.textContent = label || 'Demo';
         const isEmbed = /youtube|youtu\.be|vimeo/.test(src);
@@ -1046,51 +1064,19 @@
         modal.classList.add('open');
         modal.setAttribute('aria-hidden', 'false');
       };
-
-      const openSoon = (label) => {
-        title.textContent = label || 'Demo';
-        body.innerHTML =
-          '<div style="aspect-ratio:16/9;display:grid;place-items:center;color:#aebedd;' +
-          'font-family:\'JetBrains Mono\',monospace;font-size:14px;text-align:center;padding:24px">' +
-          '🎬 Demo video coming soon</div>';
-        modal.classList.add('open');
-        modal.setAttribute('aria-hidden', 'false');
-      };
-
       const close = () => {
         modal.classList.remove('open');
         body.innerHTML = '';
         modal.setAttribute('aria-hidden', 'true');
       };
-
-      // Every play button stays visible; with a video → play it, without → "coming soon"
       document.querySelectorAll('[data-video]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const src = btn.getAttribute('data-video');
-          const label = btn.getAttribute('data-title');
-          if (src) open(src, label);
-          else openSoon(label);
-        });
+        const src = btn.getAttribute('data-video');
+        if (!src) { btn.style.display = 'none'; return; }
+        btn.addEventListener('click', () => open(src, btn.getAttribute('data-title')));
       });
-
       document.getElementById('dm-close').addEventListener('click', close);
       modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
-    })();
-
-    // Hero video graceful fallback (keep poster if mp4 missing)
-    (function () {
-      const v = document.getElementById('hero-video');
-      if (!v) return;
-      v.addEventListener('error', () => {
-        const wrap = v.parentElement;
-        wrap.style.backgroundImage = "url('/assets/tree_viewer.png')";
-        wrap.style.backgroundSize = 'cover';
-        wrap.style.backgroundPosition = 'top center';
-        v.remove();
-        const exp = document.getElementById('hero-expand');
-        if (exp) exp.style.display = 'none';
-      });
     })();
   </script>
 </body>
