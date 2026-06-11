@@ -1,5 +1,6 @@
 import { useRef, useEffect, useMemo, useCallback } from 'react'
 import * as d3 from 'd3'
+import { collapseByThreshold } from '../../../utils/phyloUtils'
 
 function drawAnnotGroups(g, nodes, annotGroups) {
   g.selectAll('.annot-group').remove()
@@ -61,19 +62,41 @@ export default function ForceGraph({ graph, width, height, highlight, onNodeClic
   const posRef  = useRef([])   // node positions preserved across re-renders
 
   const { nodeSize=8, fontSize=10, lineColor='#b8cfef', leafColor='#1a56db',
-          metaField=null, nodeLabelField=null } = opts||{}
+          metaField=null, nodeLabelField=null, collapseThreshold=0 } = opts||{}
 
+  // radius grows with the number of merged members (sqrt keeps area proportional)
+  const radiusOf = useCallback((d) => {
+    const base = nodeSize * (d.name===highlight ? 1.5 : 1)
+    const c = d.count || 1
+    return c > 1 ? Math.min(nodeSize * 3.4, base * Math.sqrt(c)) : base
+  }, [nodeSize, highlight])
+
+  // Color scale. metaField === '_id' colours by the node's own id/name (GrapeTree
+  // style), so colouring always works even with no metadata uploaded. Otherwise it
+  // colours by the chosen metadata field. Built from the FULL graph so it is stable
+  // whether or not nodes are grouped.
   const metaColorScale = useMemo(() => {
-    if (!meta||!metaField||!graph) return null
-    const vals = [...new Set(graph.nodes.map(n=>meta[n.name]?.[metaField]).filter(Boolean))]
-    return Object.fromEntries(vals.map((v,i)=>[v, d3.schemeTableau10[i%10]]))
+    if (!graph || !metaField) return null
+    let vals
+    if (metaField === '_id') {
+      vals = [...new Set(graph.nodes.map(n => n.name).filter(Boolean))]
+    } else {
+      if (!meta) return null
+      vals = [...new Set(graph.nodes.map(n => meta[n.name]?.[metaField]).filter(Boolean))]
+    }
+    const palette = d3.schemeTableau10.concat(d3.schemeSet3 || [])
+    return Object.fromEntries(vals.map((v, i) => [v, palette[i % palette.length]]))
   }, [meta, metaField, graph])
+
+  const valueOf = useCallback((name) => (
+    metaField === '_id' ? name : meta?.[name]?.[metaField]
+  ), [metaField, meta])
 
   const getColor = useCallback((n) => {
     if (n.name===highlight) return '#ffe000'
-    if (metaColorScale&&metaField) return metaColorScale[meta?.[n.name]?.[metaField]]||leafColor
+    if (metaColorScale && metaField) return metaColorScale[valueOf(n.name)] || leafColor
     return leafColor
-  }, [highlight, metaColorScale, metaField, leafColor, meta])
+  }, [highlight, metaColorScale, metaField, leafColor, valueOf])
 
   const getLabel = useCallback((n) => {
     const lbl = nodeLabelField && meta?.[n.name]?.[nodeLabelField]
@@ -81,27 +104,74 @@ export default function ForceGraph({ graph, width, height, highlight, onNodeClic
     return name.length>24 ? name.slice(0,22)+'…' : name
   }, [nodeLabelField, meta])
 
+  // Paint each node group as a sized circle, or a pie when it merges several
+  // members and a colour field is active. Kept as a fresh callback (NOT captured
+  // inside the layout effect) so colour / "None" changes always take effect.
+  const pie = useMemo(() => d3.pie().sort(null).value(d=>d.value), [])
+  const paintNodes = useCallback((sel) => {
+    if (!sel) return
+    sel.each(function (d) {
+      const grp = d3.select(this)
+      grp.selectAll('*').remove()
+      const r = radiusOf(d)
+      const members = d.members || [d.name]
+      if ((d.count||1) > 1 && metaColorScale && metaField) {
+        const counts = {}
+        members.forEach(m => { const v = valueOf(m) || 'n/a'; counts[v] = (counts[v]||0)+1 })
+        const data = Object.entries(counts).map(([k,v]) => ({ key:k, value:v }))
+        const arc = d3.arc().innerRadius(0).outerRadius(r)
+        grp.selectAll('path').data(pie(data)).join('path')
+          .attr('d', arc)
+          .attr('fill', a => a.data.key==='n/a' ? '#c9d4e8' : (metaColorScale[a.data.key]||leafColor))
+          .attr('stroke','#fff').attr('stroke-width',1)
+      } else {
+        grp.append('circle')
+          .attr('r', r)
+          .attr('fill', getColor(d))
+          .attr('stroke','#fff').attr('stroke-width',1.5)
+      }
+      if ((d.count||1) > 1) {
+        grp.append('text')
+          .attr('text-anchor','middle').attr('dy','0.32em')
+          .attr('font-size', Math.max(9, r*0.7))
+          .attr('font-weight',700).attr('fill','#fff')
+          .attr('pointer-events','none')
+          .text(d.count)
+      }
+    })
+  }, [radiusOf, metaColorScale, metaField, valueOf, leafColor, getColor, pie])
+
+  const paintRef = useRef(paintNodes)
+  // keep the ref fresh AND repaint existing nodes whenever colour inputs change
+  useEffect(() => {
+    paintRef.current = paintNodes
+    if (selRef.current.node) paintNodes(selRef.current.node)
+  }, [paintNodes])
+
   // ── Effect 1: Full D3 setup — only when graph or size changes ─────────────
   useEffect(() => {
     if (!graph||!svgRef.current) return
     if (simRef.current) simRef.current.stop()
 
+    // collapse close nodes into composite (pie) nodes when a threshold is set
+    const gdata = collapseByThreshold(graph, collapseThreshold)
+
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove()
 
-    const maxW    = d3.max(graph.edges, e=>e.weight)||1
+    const maxW    = d3.max(gdata.edges, e=>e.weight)||1
     const lenScale= d3.scaleLinear().domain([0,maxW]).range([40,220])
 
     // Restore pinned positions from previous layout of same graph
     const prevById = Object.fromEntries(posRef.current.map(n=>[n.id,n]))
-    const nodes = graph.nodes.map(n => {
+    const nodes = gdata.nodes.map(n => {
       const p = prevById[n.id]
       return p
         ? { ...n, x:p.x, y:p.y, fx:p.fx??null, fy:p.fy??null }
         : { ...n, x:width/2+(Math.random()-.5)*300, y:height/2+(Math.random()-.5)*300 }
     })
     const nodeById= Object.fromEntries(nodes.map(n=>[n.id,n]))
-    const edges   = graph.edges.map(e=>({ source:nodeById[e.source], target:nodeById[e.target], weight:e.weight }))
+    const edges   = gdata.edges.map(e=>({ source:nodeById[e.source], target:nodeById[e.target], weight:e.weight }))
 
     const g = svg.append('g')
     svg.call(d3.zoom().scaleExtent([0.05,15]).on('zoom', e=>g.attr('transform',e.transform)))
@@ -114,19 +184,17 @@ export default function ForceGraph({ graph, width, height, highlight, onNodeClic
       .attr('font-family','"JetBrains Mono",monospace').attr('text-anchor','middle')
       .text(d=>d.weight>0?(Number.isInteger(d.weight)?d.weight:d.weight.toFixed(2)):'')
 
-    const node = g.append('g').attr('class','nodes').selectAll('circle').data(nodes).join('circle')
-      .attr('class','node-circle')
-      .attr('r', d=>d.name===highlight?nodeSize*1.5:nodeSize)
-      .attr('fill', getColor).attr('stroke','#fff').attr('stroke-width',1.5)
+    const node = g.append('g').attr('class','nodes').selectAll('g.node-g').data(nodes).join('g')
+      .attr('class','node-g')
       .style('cursor','pointer')
       .on('click', (_,d)=>onNodeClick?.(d.name))
       .call(d3.drag()
-        // gentle alpha so dragging doesn't re-animate the whole graph
         .on('start',(ev,d)=>{ if(!ev.active)sim.alphaTarget(0.05).restart(); d.fx=d.x; d.fy=d.y })
         .on('drag', (ev,d)=>{ d.fx=ev.x; d.fy=ev.y })
-        // keep pinned after drag (user placed it intentionally)
         .on('end',  (ev,d)=>{ if(!ev.active)sim.alphaTarget(0) })
       )
+
+    paintRef.current(node)
 
     const label = g.append('g').attr('class','labels').selectAll('text').data(nodes).join('text')
       .attr('class','node-label')
@@ -150,21 +218,19 @@ export default function ForceGraph({ graph, width, height, highlight, onNodeClic
       link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
           .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y)
       wLabel.attr('x',d=>(d.source.x+d.target.x)/2).attr('y',d=>(d.source.y+d.target.y)/2-4)
-      node.attr('cx',d=>d.x).attr('cy',d=>d.y)
+      node.attr('transform',d=>`translate(${d.x},${d.y})`)
       label.attr('x',d=>d.x).attr('y',d=>d.y)
     })
     sim.on('end', ()=>{ posRef.current = nodes })  // save positions when settled
 
     return () => { sim.stop(); posRef.current = nodes }
-  }, [graph, width, height])  // ← NO opts/highlight in deps — avoids re-animation!
+  }, [graph, width, height, collapseThreshold])  // re-layout when threshold changes
 
   // ── Effect 2: Update visuals only — no simulation restart ─────────────────
   useEffect(() => {
-    const { link, node, label } = selRef.current
+    const { node, label, link } = selRef.current
     if (!node || !label) return
-    node
-      .attr('r',    d => d.name===highlight ? nodeSize*1.5 : nodeSize)
-      .attr('fill', getColor)
+    paintRef.current(node)                // recolour / redraw pies & circles (fresh)
     label
       .attr('font-size',   fontSize)
       .attr('font-weight', d => d.name===highlight ? 700 : 400)
@@ -177,4 +243,3 @@ export default function ForceGraph({ graph, width, height, highlight, onNodeClic
   return <svg ref={svgRef} width={width} height={height}
     style={{ display:'block', background:'#fff', cursor:'grab' }}/>
 }
-

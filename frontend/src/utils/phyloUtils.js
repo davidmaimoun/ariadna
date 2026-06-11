@@ -66,3 +66,47 @@ export function parseDistanceMatrix(text) {
 }
 
 export function buildMST(labels, matrix) { return mstKruskal(labels, matrix) }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Collapse a graph (MST/GoeBURST) by merging nodes joined by an edge whose
+// weight (distance) is below `threshold`. Returns a new {nodes, edges} where
+// merged nodes carry `members` (original names) and `count`. Between-group
+// edges keep the minimum crossing weight; internal edges are dropped.
+// This powers the "group close nodes into a pie" view (à la GrapeTree).
+export function collapseByThreshold(graph, threshold) {
+  if (!graph || !threshold || threshold <= 0) return graph
+
+  const parent = {}
+  const find = (x) => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x] } return x }
+  const union = (a, b) => { const ra = find(a), rb = find(b); if (ra !== rb) parent[ra] = rb }
+
+  graph.nodes.forEach((n) => { parent[n.id] = n.id })
+  graph.edges.forEach((e) => { if (e.weight < threshold) union(e.source, e.target) })
+
+  // group original nodes by their representative root
+  const groups = {}
+  graph.nodes.forEach((n) => { const r = find(n.id); (groups[r] = groups[r] || []).push(n) })
+
+  const idMap = {}   // originalId -> groupRoot
+  const newNodes = Object.entries(groups).map(([root, members]) => {
+    members.forEach((m) => { idMap[m.id] = root })
+    const rep = members[0]
+    return {
+      id: root,
+      name: members.length > 1 ? `${rep.name} +${members.length - 1}` : rep.name,
+      members: members.map((m) => m.name),
+      count: members.length,
+    }
+  })
+
+  // collapse edges between groups, keep the smallest crossing weight
+  const emap = {}
+  graph.edges.forEach((e) => {
+    const a = idMap[e.source], b = idMap[e.target]
+    if (a === b) return
+    const key = a < b ? a + '|' + b : b + '|' + a
+    if (!emap[key] || e.weight < emap[key].weight) emap[key] = { source: a, target: b, weight: e.weight }
+  })
+
+  return { nodes: newNodes, edges: Object.values(emap) }
+}

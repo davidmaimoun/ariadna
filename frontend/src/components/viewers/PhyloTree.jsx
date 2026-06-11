@@ -34,7 +34,7 @@ export default function PhyloTree({ data, onClose, autoLoad, onAutoLoaded }) {
   const [opts, setOpts] = useState({
     nodeSize:14, fontSize:12, branchFontSize:8,
     lineColor:'#9ec5fe', lineWidth:1.4, leafColor:'#1a56db',
-    metaField:null,
+    metaField:'_id',
     alignTips:true, cladogram:false, showScale:true, showNodes:false, showBranchLen:true, showSupport:true,
   })
   const [zoom, setZoom] = useState(1)

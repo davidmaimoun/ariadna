@@ -96,9 +96,34 @@ export default function PhyloSidePanel({ mode, treeData, opts, setOpts, meta, se
             </div>
             )}
 
+            <Slider label="Branch label size" field="branchFontSize" min={0} max={16} step={0.5}/>
+
             <Slider label="Node size"       field="nodeSize" min={1}  max={60} step={0.5}/>
             <Slider label="Label font size" field="fontSize" min={6}  max={40} step={0.5}/>
-            <Slider label="Branch label size" field="branchFontSize" min={0} max={16} step={0.5}/>
+
+            {/* MST/GoeBURST only: merge nodes joined by a short branch into one pie node */}
+            {mode === 'force' && (
+              <div style={{ marginBottom:14, padding:'11px 12px', background:'var(--bg2)', borderRadius:8, border:'1px solid var(--border2)' }}>
+                <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:12.5, color:'var(--txt2)', fontWeight:600, marginBottom:8 }}>
+                  <input type="checkbox"
+                    checked={(opts.collapseThreshold||0) > 0}
+                    onChange={e=>setOpts(o=>({...o, collapseThreshold: e.target.checked ? (o._lastCollapse||10) : 0}))}
+                    style={{ accentColor:'var(--accent)', width:15, height:15 }}/>
+                  Group nodes by distance
+                </label>
+                <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+                  <span style={{ fontSize:12, color:'var(--txt3)' }}>Merge if branch &lt;</span>
+                  <input type="number" min={0} step="any"
+                    value={opts.collapseThreshold || 0}
+                    onChange={e=>{
+                      const v = Math.max(0, parseFloat(e.target.value) || 0)
+                      setOpts(o=>({...o, collapseThreshold:v, _lastCollapse: v>0 ? v : o._lastCollapse}))
+                    }}
+                    style={{ width:74, padding:'5px 8px', borderRadius:7, border:'1px solid var(--border2)',
+                      background:'var(--bg)', color:'var(--txt1)', fontSize:13, fontFamily:'"JetBrains Mono",monospace' }}/>
+                </div>
+              </div>
+            )}
 
             <div style={{ marginBottom:12 }}>
               <div style={{ fontSize:12, color:'var(--txt2)', marginBottom:6 }}>Node color</div>
@@ -133,14 +158,18 @@ export default function PhyloSidePanel({ mode, treeData, opts, setOpts, meta, se
                 <Upload size={13}/> Load metadata (CSV/TSV)
               </button>
               <div style={{ fontSize:10.5, color:'var(--txt4)', marginBottom:8 }}>First col = sample name, rest = fields</div>
+              {/* Colour-by is ALWAYS available. '_id' colours by each node's own id
+                  (GrapeTree style), so it works even before any metadata is loaded. */}
+              <div style={{ fontSize:12, color:'var(--txt2)', marginBottom:5 }}>Color nodes by field</div>
+              <select value={opts.metaField ?? '_id'} onChange={e=>setOpts(o=>({...o,metaField:e.target.value}))}
+                style={{ width:'100%', fontSize:12, marginBottom:8 }}>
+                <option value="_id">_id (node id)</option>
+                <option value="">None (single color)</option>
+                {metaFields.map(f=><option key={f} value={f}>{f}</option>)}
+              </select>
+
               {metaFields.length>0&&(
                 <>
-                  <div style={{ fontSize:12, color:'var(--txt2)', marginBottom:5 }}>Color nodes by field</div>
-                  <select value={opts.metaField||''} onChange={e=>setOpts(o=>({...o,metaField:e.target.value||null}))}
-                    style={{ width:'100%', fontSize:12, marginBottom:8 }}>
-                    <option value="">None</option>
-                    {metaFields.map(f=><option key={f} value={f}>{f}</option>)}
-                  </select>
                   <div style={{ fontSize:12, color:'var(--txt2)', marginBottom:5 }}>Rename nodes from field</div>
                   <select value={opts.nodeLabelField||''} onChange={e=>setOpts(o=>({...o,nodeLabelField:e.target.value||null}))}
                     style={{ width:'100%', fontSize:12 }}>
@@ -148,7 +177,7 @@ export default function PhyloSidePanel({ mode, treeData, opts, setOpts, meta, se
                     {metaFields.map(f=><option key={f} value={f}>{f}</option>)}
                   </select>
                   <div style={{ fontSize:10, color:'var(--txt4)', marginTop:4 }}>Works in MST/Force mode</div>
-                  {opts.metaField&&(
+                  {opts.metaField&&opts.metaField!=='_id'&&(
                     <div style={{ marginTop:8 }}>
                       {[...new Set(Object.values(meta).map(m=>m[opts.metaField]).filter(Boolean))].map((v,i)=>(
                         <div key={v} style={{ display:'flex', alignItems:'center', gap:7, padding:'2px 0', fontSize:11 }}>
