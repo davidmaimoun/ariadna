@@ -55,7 +55,7 @@ export default function Footer() {
         onMouseEnter={e=>e.currentTarget.style.color='#ffd36b'}
         onMouseLeave={e=>e.currentTarget.style.color='#e0b34a'}>
         <span style={{ fontSize:12 }}>♥</span>
-        Support
+        Support our work
       </a>
     </footer>
   )
