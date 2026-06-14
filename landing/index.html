@@ -374,10 +374,8 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain;
-      object-position: center;
-      /* background: #0b1a4a; */
-      background: white;
+      object-fit: cover;
+      object-position: top center;
     }
     .shot-ph { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #7c93bd; }
 
@@ -532,9 +530,6 @@
   </style>
 </head>
 
-<!-- Visit Tracker -->
-<img src="/track" alt="" width="1" height="1" style="position:absolute;left:-9999px">
-
 <body>
 
   <div class="dna-bg" id="dnaBg" aria-hidden="true"></div>
@@ -596,8 +591,8 @@
         </div>
         <div class="hero-video-wrap">
           <video id="hero-video"
-                 src="/assets/ariadna-main-audio.mp4"
-                 poster="/assets/tree.png"
+                 src="/assets/hero-demo.mp4"
+                 poster="/assets/tree_viewer.png"
                  autoplay muted loop playsinline preload="metadata"></video>
           <button class="hero-expand" id="hero-expand" data-video="/assets/hero-demo.mp4" data-title="AriaDNA — full demo">
             <span>⤢</span><span>Watch demo</span>
@@ -652,12 +647,12 @@
             </div>
             <div class="ms-shot">
               <span class="shot-ph">/assets/seq_viewer_cut.png</span>
-              <img src="/assets/seq_viewer_all.png" alt="AriaDNA sequence viewer" loading="lazy" onerror="this.remove()" />
+              <img src="/assets/seq_viewer_cut.png" alt="AriaDNA sequence viewer" loading="lazy" onerror="this.remove()" />
             </div>
           </div>
           <div class="prow-actions">
-            <a class="btn-site" href="/app"><span class="bs-icon">↗</span><span>Open in app</span></a>
-            <button class="video-play-btn" data-video="/assets/ariadna-seq.mp4" data-title="Sequence viewer demo">
+            <a class="btn-site" href="/app/sequence"><span class="bs-icon">↗</span><span>Open in app</span></a>
+            <button class="video-play-btn" data-video="" data-title="Sequence viewer demo">
               <span class="vp-icon">▶</span><span class="vp-label">Watch demo</span>
             </button>
           </div>
@@ -694,12 +689,12 @@
               <span class="ms-url">ariadna-bio.com/app/msa</span>
             </div>
             <div class="ms-shot">
-              <span class="shot-ph">/assets/multi_algmt.png</span>
-              <img src="/assets/multi_algmt.png" alt="AriaDNA alignment viewer" loading="lazy" onerror="this.remove()" />
+              <span class="shot-ph">/assets/multi_al.png</span>
+              <img src="/assets/multi_al.png" alt="AriaDNA alignment viewer" loading="lazy" onerror="this.remove()" />
             </div>
           </div>
           <div class="prow-actions">
-            <a class="btn-site" href="/app"><span class="bs-icon">↗</span><span>Open in app</span></a>
+            <a class="btn-site" href="/app/sequence"><span class="bs-icon">↗</span><span>Open in app</span></a>
             <button class="video-play-btn" data-video="" data-title="Alignment demo">
               <span class="vp-icon">▶</span><span class="vp-label">Watch demo</span>
             </button>
@@ -739,12 +734,12 @@
             </div>
             <div class="ms-shot">
               <span class="shot-ph">/assets/tree_viewer.png</span>
-              <img src="/assets/tree.png" alt="AriaDNA phylogenetic tree viewer" loading="lazy" onerror="this.remove()" />
+              <img src="/assets/tree_viewer.png" alt="AriaDNA phylogenetic tree viewer" loading="lazy" onerror="this.remove()" />
             </div>
           </div>
           <div class="prow-actions">
-            <a class="btn-site" href="/app"><span class="bs-icon">↗</span><span>Open in app</span></a>
-            <button class="video-play-btn" data-video="/assets/ariadna-tree.mp4" data-title="Tree demo">
+            <a class="btn-site" href="/app/tree"><span class="bs-icon">↗</span><span>Open in app</span></a>
+            <button class="video-play-btn" data-video="" data-title="Tree demo">
               <span class="vp-icon">▶</span><span class="vp-label">Watch demo</span>
             </button>
           </div>
@@ -781,13 +776,13 @@
               <span class="ms-url">ariadna-bio.com/app/matrix</span>
             </div>
             <div class="ms-shot">
-              <span class="shot-ph">/assets/matrix.png</span>
-              <img src="/assets/matrix.png" alt="AriaDNA matrix heatmap" loading="lazy" onerror="this.remove()" />
+              <span class="shot-ph">/assets/heatmap.png</span>
+              <img src="/assets/heatmap.png" alt="AriaDNA matrix heatmap" loading="lazy" onerror="this.remove()" />
             </div>
           </div>
           <div class="prow-actions">
-            <a class="btn-site" href="/app"><span class="bs-icon">↗</span><span>Open in app</span></a>
-            <button class="video-play-btn" data-video="/assets/ariadna-matrix.mp4" data-title="Matrix demo">
+            <a class="btn-site" href="/app/matrix"><span class="bs-icon">↗</span><span>Open in app</span></a>
+            <button class="video-play-btn" data-video="" data-title="Matrix demo">
               <span class="vp-icon">▶</span><span class="vp-label">Watch demo</span>
             </button>
           </div>
@@ -827,8 +822,8 @@
             </div>
           </div>
           <div class="prow-actions">
-            <a class="btn-site" href="/app"><span class="bs-icon">↗</span><span>Open in app</span></a>
-            <button class="video-play-btn" data-video="/assets/ariadna-sanger.mp4" data-title="Sanger demo">
+            <a class="btn-site" href="/app/sanger"><span class="bs-icon">↗</span><span>Open in app</span></a>
+            <button class="video-play-btn" data-video="" data-title="Sanger demo">
               <span class="vp-icon">▶</span><span class="vp-label">Watch demo</span>
             </button>
           </div>
@@ -866,12 +861,12 @@
               <span class="ms-url">ariadna-bio.com/app/vcf</span>
             </div>
             <div class="ms-shot">
-              <span class="shot-ph">/assets/vcf_table.png</span>
-              <img src="/assets/vcf_table.png" alt="AriaDNA VCF / BAM / BLAST viewer" loading="lazy" onerror="this.remove()" />
+              <span class="shot-ph">/assets/vcf.png</span>
+              <img src="/assets/vcf.png" alt="AriaDNA VCF / BAM / BLAST viewer" loading="lazy" onerror="this.remove()" />
             </div>
           </div>
           <div class="prow-actions">
-            <a class="btn-site" href="/app"><span class="bs-icon">↗</span><span>Open in app</span></a>
+            <a class="btn-site" href="/app/sequence"><span class="bs-icon">↗</span><span>Open in app</span></a>
             <button class="video-play-btn" data-video="" data-title="Variants demo">
               <span class="vp-icon">▶</span><span class="vp-label">Watch demo</span>
             </button>
@@ -992,10 +987,19 @@
           <a href="/docs.html">Documentation</a>
           <a href="/contact.html">Contact</a>
           <a href="mailto:sudosudev@outlook.com">Email us</a>
+          <a href="https://paypal.me/sudosudev" target="_blank" rel="noopener"
+             onclick="fetch('/track?e=donate_click').catch(()=>{})">Support AriaDNA ♥</a>
         </div>
       </div>
-      <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--fog);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--fog);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
         <span class="mono">© 2026 AriaDNA · Genomic Viewer</span>
+        <a href="https://paypal.me/sudosudev" target="_blank" rel="noopener"
+           onclick="fetch('/track?e=donate_click').catch(()=>{})"
+           style="display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:10px;
+                  background:linear-gradient(105deg,#f0b429,#d97706);color:#1a1a1a;font-weight:700;
+                  font-size:12.5px;text-decoration:none;box-shadow:0 5px 16px rgba(224,147,15,.28)">
+          <span>♥</span><span>Support AriaDNA</span>
+        </a>
         <span class="mono">Powered by <a href="https://www.sudosudev.com" target="_blank" rel="noopener" style="color:var(--cyan)">sudosu.dev</a></span>
       </div>
     </div>
