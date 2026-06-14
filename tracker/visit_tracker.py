@@ -77,6 +77,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         self.send_response(404)
         self.end_headers()
+    
+    def do_HEAD(self):
+        # Respond to HEAD like GET but without a body (some clients probe with HEAD)
+        path = self.path.split("?")[0]
+        if path == "/track":
+            self.send_response(200)
+            self.send_header("Content-Type", "image/gif")
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+        elif path == "/count":
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.end_headers()
+        else:
+            self.send_response(404)
+            self.end_headers()
 
 
 class ThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
