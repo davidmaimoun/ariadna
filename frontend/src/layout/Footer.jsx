@@ -25,6 +25,7 @@ export default function Footer() {
             sudosu.dev
           </a>
         </span>
+        
         <span style={{ color:'#2a4a7a' }}>·</span>
         {link('https://linkedin.com/in/sudosu', (
           <>
@@ -34,6 +35,7 @@ export default function Footer() {
             LinkedIn
           </>
         ))}
+
         <span style={{ color:'#2a4a7a' }}>·</span>
         {link('mailto:sudosudev@outlook.com', (
           <>
@@ -44,6 +46,7 @@ export default function Footer() {
             sudosudev@outlook.com
           </>
         ))}
+
         <span style={{ color:'#2a4a7a' }}>·</span>
         <a href="https://paypal.me/sudosudev" target="_blank" rel="noreferrer"
           onClick={() => { try { fetch('/track?e=donate_click') } catch (e) { /* noop */ } }}
